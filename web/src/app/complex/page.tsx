@@ -4,7 +4,11 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { BASEMAP_TILES, KOREA_CENTER, getHealthColor } from "@/lib/constants";
+import { BASEMAP_TILES, KOREA_CENTER } from "@/lib/constants";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell,
+  PieChart, Pie,
+} from "recharts";
 
 interface ComplexData {
   id: string;
@@ -35,6 +39,11 @@ const TYPE_COLORS: Record<string, string> = {
 
 const TYPE_ORDER = ["국가", "일반", "도시첨단", "농공"];
 
+const tooltipStyle = {
+  background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px",
+  fontSize: "12px", color: "#334155", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.07)",
+};
+
 function formatNum(n: number): string {
   if (n >= 10000) return (n / 10000).toFixed(1) + "만";
   if (n >= 1000) return (n / 1000).toFixed(1) + "천";
@@ -51,6 +60,7 @@ export default function ComplexPage() {
   const [mapReady, setMapReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showList, setShowList] = useState(true);
+  const [showCharts, setShowCharts] = useState(false);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const popup = useRef<maplibregl.Popup | null>(null);
@@ -131,7 +141,48 @@ export default function ComplexPage() {
     employment: filtered.reduce((s, c) => s + c.employment, 0),
     production: filtered.reduce((s, c) => s + c.production, 0),
     tenants: filtered.reduce((s, c) => s + c.tenantCount, 0),
+    area: filtered.reduce((s, c) => s + c.area, 0),
+    avgOccupancy: filtered.length ? filtered.reduce((s, c) => s + c.occupancyRate, 0) / filtered.length : 0,
   }), [filtered]);
+
+  // Chart data: employment by type
+  const employmentByType = useMemo(() => {
+    return TYPE_ORDER.map((type) => {
+      const list = filtered.filter((c) => c.type === type);
+      return {
+        type,
+        employment: list.reduce((s, c) => s + c.employment, 0),
+        production: list.reduce((s, c) => s + c.production, 0),
+        count: list.length,
+        color: TYPE_COLORS[type],
+      };
+    }).filter((d) => d.count > 0);
+  }, [filtered]);
+
+  // Chart data: top 10 by employment
+  const topByEmployment = useMemo(() => {
+    return [...filtered].sort((a, b) => b.employment - a.employment).slice(0, 10).map((c) => ({
+      name: c.name.length > 8 ? c.name.slice(0, 8) + "…" : c.name,
+      employment: c.employment,
+      type: c.type,
+    }));
+  }, [filtered]);
+
+  // Province breakdown
+  const provinceBreakdown = useMemo(() => {
+    const map = new Map<string, { employment: number; count: number; production: number }>();
+    filtered.forEach((c) => {
+      const prev = map.get(c.province) || { employment: 0, count: 0, production: 0 };
+      prev.employment += c.employment;
+      prev.count++;
+      prev.production += c.production;
+      map.set(c.province, prev);
+    });
+    return Array.from(map.entries())
+      .map(([name, d]) => ({ name: name.replace(/특별자치도|특별시|광역시|도$/, ""), ...d }))
+      .sort((a, b) => b.employment - a.employment)
+      .slice(0, 10);
+  }, [filtered]);
 
   // GeoJSON for map
   const geojsonData = useMemo(() => ({
@@ -151,7 +202,6 @@ export default function ComplexPage() {
     if (!markersSource.current) {
       m.addSource("complexes", { type: "geojson", data: geojsonData });
 
-      // Circle layer
       m.addLayer({
         id: "complex-circles",
         type: "circle",
@@ -181,22 +231,11 @@ export default function ComplexPage() {
             "#6b7280",
           ],
           "circle-opacity": 0.8,
-          "circle-stroke-width": [
-            "case",
-            ["boolean", ["feature-state", "selected"], false],
-            3,
-            1.5
-          ],
-          "circle-stroke-color": [
-            "case",
-            ["boolean", ["feature-state", "selected"], false],
-            "#ef4444",
-            "#ffffff"
-          ],
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "#ffffff",
         },
       });
 
-      // Labels
       m.addLayer({
         id: "complex-labels",
         type: "symbol",
@@ -217,7 +256,6 @@ export default function ComplexPage() {
         minzoom: 9,
       });
 
-      // Hover/click handlers
       m.on("mouseenter", "complex-circles", () => { m.getCanvas().style.cursor = "pointer"; });
       m.on("mouseleave", "complex-circles", () => { m.getCanvas().style.cursor = ""; popup.current?.remove(); });
 
@@ -276,9 +314,15 @@ export default function ComplexPage() {
         <div className="p-3 border-b border-[var(--border)] space-y-2">
           <div className="flex items-center justify-between">
             <h1 className="text-base font-bold text-[var(--text-primary)]">산업단지 현황</h1>
-            <span className="text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] px-2 py-0.5 rounded-full">
-              {stats.count.toLocaleString()}개 단지
-            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowCharts(!showCharts)}
+                className={`text-[10px] px-2 py-1 rounded font-medium transition-colors ${showCharts ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-secondary)] text-[var(--text-tertiary)]"}`}
+              >{showCharts ? "목록" : "차트"}</button>
+              <span className="text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] px-2 py-0.5 rounded-full">
+                {stats.count.toLocaleString()}개 단지
+              </span>
+            </div>
           </div>
           <input
             type="text" placeholder="산업단지, 지역, 업종 검색..." value={search} onChange={(e) => setSearch(e.target.value)}
@@ -324,34 +368,96 @@ export default function ComplexPage() {
           ))}
         </div>
 
-        {/* List */}
-        <div className="flex-1 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <div className="p-8 text-center text-[var(--text-tertiary)] text-sm">검색 결과 없음</div>
-          ) : (
-            filtered.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => { handleSelect(c); setShowList(false); }}
-                className={`w-full px-3 py-2.5 text-left border-b border-[var(--border-light)] transition-colors ${
-                  selected?.id === c.id ? "bg-[var(--accent-light)]" : "hover:bg-[var(--bg-secondary)]"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-[var(--text-primary)] truncate">{c.name}</span>
-                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded flex-shrink-0" style={{ backgroundColor: TYPE_COLORS[c.type] + "18", color: TYPE_COLORS[c.type] }}>{c.type}</span>
+        {/* Charts or List */}
+        {showCharts ? (
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            {/* Employment by type pie */}
+            <div className="bg-[var(--bg-secondary)] rounded-lg p-3">
+              <h3 className="text-[11px] font-semibold text-[var(--text-primary)] mb-2">유형별 고용</h3>
+              <div className="h-[160px] flex items-center">
+                <ResponsiveContainer width="60%" height="100%">
+                  <PieChart>
+                    <Pie data={employmentByType} cx="50%" cy="50%" innerRadius={30} outerRadius={55} paddingAngle={2} dataKey="employment" nameKey="type">
+                      {employmentByType.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v.toLocaleString() + "명", "고용"]} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-1.5 flex-1">
+                  {employmentByType.map((d) => (
+                    <div key={d.type} className="flex items-center gap-1.5 text-[10px]">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
+                      <span className="text-[var(--text-secondary)]">{d.type}</span>
+                      <span className="ml-auto font-medium text-[var(--text-primary)]">{formatNum(d.employment)}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[var(--text-tertiary)]">
-                  <span>{c.province} {c.sigungu}</span>
-                  <span className="text-[var(--border)]">|</span>
-                  <span>입주 {c.tenantCount.toLocaleString()}</span>
-                  <span>고용 {c.employment.toLocaleString()}</span>
-                  <span className="text-[var(--text-secondary)]">{c.mainIndustry}</span>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
+              </div>
+            </div>
+
+            {/* Top 10 by employment bar */}
+            <div className="bg-[var(--bg-secondary)] rounded-lg p-3">
+              <h3 className="text-[11px] font-semibold text-[var(--text-primary)] mb-2">고용 상위 10</h3>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topByEmployment} layout="vertical" margin={{ top: 0, right: 8, left: 60, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 9 }} />
+                    <YAxis type="category" dataKey="name" tick={{ fill: "#475569", fontSize: 9 }} width={58} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v.toLocaleString() + "명", "고용"]} />
+                    <Bar dataKey="employment" radius={[0, 3, 3, 0]}>
+                      {topByEmployment.map((d, i) => <Cell key={i} fill={TYPE_COLORS[d.type] || "#6b7280"} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Province breakdown */}
+            <div className="bg-[var(--bg-secondary)] rounded-lg p-3">
+              <h3 className="text-[11px] font-semibold text-[var(--text-primary)] mb-2">시도별 고용 현황</h3>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={provinceBreakdown} layout="vertical" margin={{ top: 0, right: 8, left: 40, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 9 }} />
+                    <YAxis type="category" dataKey="name" tick={{ fill: "#475569", fontSize: 9 }} width={38} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v.toLocaleString() + "명", "고용"]} />
+                    <Bar dataKey="employment" fill="#2563eb" radius={[0, 3, 3, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="p-8 text-center text-[var(--text-tertiary)] text-sm">검색 결과 없음</div>
+            ) : (
+              filtered.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => { handleSelect(c); setShowList(false); }}
+                  className={`w-full px-3 py-2.5 text-left border-b border-[var(--border-light)] transition-colors ${
+                    selected?.id === c.id ? "bg-[var(--accent-light)]" : "hover:bg-[var(--bg-secondary)]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-[var(--text-primary)] truncate">{c.name}</span>
+                    <span className="text-[9px] font-medium px-1.5 py-0.5 rounded flex-shrink-0" style={{ backgroundColor: TYPE_COLORS[c.type] + "18", color: TYPE_COLORS[c.type] }}>{c.type}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[var(--text-tertiary)]">
+                    <span>{c.province} {c.sigungu}</span>
+                    <span className="text-[var(--border)]">|</span>
+                    <span>입주 {c.tenantCount.toLocaleString()}</span>
+                    <span>고용 {c.employment.toLocaleString()}</span>
+                    <span className="text-[var(--text-secondary)]">{c.mainIndustry}</span>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Map + Detail */}
@@ -450,12 +556,12 @@ export default function ComplexPage() {
   );
 }
 
-function StatCard({ label, value, unit, color }: { label: string; value: string; unit: string; color?: string }) {
+function StatCard({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
     <div className="bg-[var(--bg-secondary)] rounded-lg p-2">
       <div className="text-[9px] text-[var(--text-tertiary)]">{label}</div>
       <div className="flex items-baseline gap-0.5 mt-0.5">
-        <span className="text-sm font-bold" style={{ color: color || "var(--text-primary)" }}>{value}</span>
+        <span className="text-sm font-bold text-[var(--text-primary)]">{value}</span>
         <span className="text-[9px] text-[var(--text-tertiary)]">{unit}</span>
       </div>
     </div>

@@ -2,26 +2,32 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { RegionData, HistoricalData } from "@/lib/types";
-import { getHealthColor, PROVINCE_SHORT, DATA_CATEGORIES, DataLayerKey, getRegionValue, formatLayerValue, getLayerDef } from "@/lib/constants";
+import { getHealthColor, PROVINCE_SHORT, DATA_CATEGORIES, DataLayerKey, getRegionValue, formatLayerValue, getLayerDef, DataCategory } from "@/lib/constants";
 import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell,
-  AreaChart, Area, LineChart, Line, BarChart, Bar, Legend,
+  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  LineChart, Line, Legend,
+  ComposedChart, Bar, Area,
 } from "recharts";
 
-const COMPARE_COLORS = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#ec4899", "#0891b2", "#84cc16"];
+const tooltipStyle = {
+  background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px",
+  fontSize: "12px", color: "#334155", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.07)",
+};
+
+type AnalysisTab = "scatter" | "trend" | "correlation" | "composed";
 
 export default function AnalysisPage() {
   const [regions, setRegions] = useState<RegionData[]>([]);
   const [historicalData, setHistoricalData] = useState<HistoricalData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [xAxis, setXAxis] = useState<DataLayerKey>("companyCount");
-  const [yAxis, setYAxis] = useState<DataLayerKey>("healthScore");
-  const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
-
-  // Trend comparison state
+  const [activeTab, setActiveTab] = useState<AnalysisTab>("scatter");
+  const [xKey, setXKey] = useState<DataLayerKey>("companyCount");
+  const [yKey, setYKey] = useState<DataLayerKey>("employeeCount");
   const [trendMetric, setTrendMetric] = useState<DataLayerKey>("healthScore");
-  const [compareRegions, setCompareRegions] = useState<string[]>([]);
-  const [regionSearch, setRegionSearch] = useState("");
+  const [trendGrouping, setTrendGrouping] = useState<"province" | "national">("national");
+  const [corrCat, setCorrCat] = useState<DataCategory>("industry");
+  const [composedMetric1, setComposedMetric1] = useState<DataLayerKey>("companyCount");
+  const [composedMetric2, setComposedMetric2] = useState<DataLayerKey>("employeeCount");
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -29,393 +35,432 @@ export default function AnalysisPage() {
       fetch(`${base}/data/sample-regions.json`).then((r) => r.json()),
       fetch(`${base}/data/sample-historical.json`).then((r) => r.json()),
     ])
-      .then(([regionData, histData]) => { setRegions(regionData); setHistoricalData(histData); setLoading(false); })
+      .then(([regionData, histData]) => {
+        setRegions(regionData);
+        setHistoricalData(histData);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
   const allLayers = useMemo(() => DATA_CATEGORIES.flatMap((c) => c.layers), []);
 
-  const scatterData = useMemo(() => {
-    let list = regions;
-    if (selectedProvince) list = list.filter((r) => r.code.startsWith(selectedProvince));
-    return list.map((r) => ({
-      name: r.name,
-      province: r.province,
-      x: getRegionValue(r, xAxis),
-      y: getRegionValue(r, yAxis),
-      health: r.healthScore,
-      code: r.code,
-    }));
-  }, [regions, xAxis, yAxis, selectedProvince]);
+  // Invisible dot for regression line (workaround for Recharts shape typing)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const regressionDot: any = (p: any) => <circle cx={p.cx} cy={p.cy} r={0} fill="none" />;
 
-  const nationalTrend = useMemo(() => {
+  // Scatter data with regression line
+  const scatterData = useMemo(() => {
+    return regions.map((r) => ({
+      x: getRegionValue(r, xKey),
+      y: getRegionValue(r, yKey),
+      name: r.name,
+      health: r.healthScore,
+    }));
+  }, [regions, xKey, yKey]);
+
+  // Linear regression
+  const regression = useMemo(() => {
+    const n = scatterData.length;
+    if (n < 2) return null;
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    scatterData.forEach((d) => { sumX += d.x; sumY += d.y; sumXY += d.x * d.y; sumX2 += d.x * d.x; });
+    const denom = n * sumX2 - sumX * sumX;
+    if (Math.abs(denom) < 1e-10) return null;
+    const slope = (n * sumXY - sumX * sumY) / denom;
+    const intercept = (sumY - slope * sumX) / n;
+    const xMin = Math.min(...scatterData.map((d) => d.x));
+    const xMax = Math.max(...scatterData.map((d) => d.x));
+
+    // R-squared
+    const yMean = sumY / n;
+    let ssTot = 0, ssRes = 0;
+    scatterData.forEach((d) => {
+      ssTot += (d.y - yMean) ** 2;
+      ssRes += (d.y - (slope * d.x + intercept)) ** 2;
+    });
+    const r2 = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+
+    return {
+      slope, intercept, r2,
+      line: [
+        { x: xMin, y: slope * xMin + intercept },
+        { x: xMax, y: slope * xMax + intercept },
+      ],
+    };
+  }, [scatterData]);
+
+  // Pearson correlation
+  const correlation = useMemo(() => {
+    const n = scatterData.length;
+    if (n < 2) return 0;
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+    scatterData.forEach((d) => { sumX += d.x; sumY += d.y; sumXY += d.x * d.y; sumX2 += d.x * d.x; sumY2 += d.y * d.y; });
+    const num = n * sumXY - sumX * sumY;
+    const den = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    return den > 0 ? num / den : 0;
+  }, [scatterData]);
+
+  // Trend data
+  const trendData = useMemo(() => {
     if (!historicalData) return [];
     const years = historicalData.endYear - historicalData.startYear + 1;
-    return Array.from({ length: years }, (_, i) => {
-      const year = historicalData.startYear + i;
-      let sumHealth = 0, sumPop = 0, sumCompany = 0, count = 0;
-      Object.values(historicalData.data).forEach((regionYears) => {
-        const d = regionYears[i];
-        if (d) {
-          sumHealth += d.healthScore ?? 0;
-          sumPop += d.population ?? 0;
-          sumCompany += d.companyCount ?? 0;
-          count++;
-        }
+    if (trendGrouping === "national") {
+      return Array.from({ length: years }, (_, i) => {
+        let sum = 0, count = 0;
+        Object.values(historicalData.data).forEach((regionYears) => {
+          const d = regionYears[i];
+          if (d && d[trendMetric] !== undefined) { sum += d[trendMetric]; count++; }
+        });
+        return { year: historicalData.startYear + i, value: count ? sum / count : 0 };
       });
-      return {
-        year,
-        avgHealth: count ? sumHealth / count : 0,
-        totalPop: sumPop,
-        totalCompany: sumCompany,
-      };
-    });
-  }, [historicalData]);
-
-  const provinceComparison = useMemo(() => {
-    const map = new Map<string, { health: number; pop: number; company: number; count: number }>();
-    regions.forEach((r) => {
-      const prefix = r.code.substring(0, 2);
-      const prev = map.get(prefix) || { health: 0, pop: 0, company: 0, count: 0 };
-      prev.health += r.healthScore;
-      prev.pop += r.population;
-      prev.company += r.companyCount;
-      prev.count++;
-      map.set(prefix, prev);
-    });
-    return Array.from(map.entries())
-      .map(([code, d]) => ({
-        name: PROVINCE_SHORT[code] || code,
-        avgHealth: d.health / d.count,
-        population: d.pop,
-        companies: d.company,
-      }))
-      .sort((a, b) => b.avgHealth - a.avgHealth);
-  }, [regions]);
-
-  // Regional trend comparison data
-  const trendCompareData = useMemo(() => {
-    if (!historicalData || compareRegions.length === 0) return [];
-    const years = historicalData.endYear - historicalData.startYear + 1;
-    return Array.from({ length: years }, (_, i) => {
-      const year = historicalData.startYear + i;
-      const row: Record<string, number> = { year };
-      compareRegions.forEach((code) => {
-        const regionHist = historicalData.data[code];
-        if (regionHist && regionHist[i]) {
-          row[code] = regionHist[i][trendMetric] ?? 0;
-        }
+    } else {
+      const provinceMap = new Map<string, Map<number, { sum: number; count: number }>>();
+      Object.entries(historicalData.data).forEach(([code, yearData]) => {
+        const provCode = code.substring(0, 2);
+        const provName = PROVINCE_SHORT[provCode] || provCode;
+        if (!provinceMap.has(provName)) provinceMap.set(provName, new Map());
+        const pMap = provinceMap.get(provName)!;
+        yearData.forEach((d, i) => {
+          if (!pMap.has(i)) pMap.set(i, { sum: 0, count: 0 });
+          const prev = pMap.get(i)!;
+          prev.sum += d[trendMetric] ?? 0;
+          prev.count++;
+        });
       });
-      return row;
-    });
-  }, [historicalData, compareRegions, trendMetric]);
+      return Array.from({ length: years }, (_, i) => {
+        const row: Record<string, number> = { year: historicalData.startYear + i };
+        provinceMap.forEach((pMap, name) => {
+          const entry = pMap.get(i);
+          row[name] = entry && entry.count ? entry.sum / entry.count : 0;
+        });
+        return row;
+      });
+    }
+  }, [historicalData, trendMetric, trendGrouping]);
 
-  const regionNameMap = useMemo(() => {
-    const m = new Map<string, string>();
-    regions.forEach((r) => m.set(r.code, r.name));
-    return m;
-  }, [regions]);
+  const provinceKeys = useMemo(() => {
+    if (trendGrouping !== "province" || !trendData.length) return [];
+    return Object.keys(trendData[0]).filter((k) => k !== "year");
+  }, [trendData, trendGrouping]);
 
-  const searchResults = useMemo(() => {
-    if (!regionSearch.trim()) return [];
-    const q = regionSearch.toLowerCase();
-    return regions
-      .filter((r) => (r.name.toLowerCase().includes(q) || r.province.includes(q)) && !compareRegions.includes(r.code))
-      .slice(0, 8);
-  }, [regions, regionSearch, compareRegions]);
+  const PROV_COLORS = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#ec4899", "#0891b2", "#84cc16", "#f97316", "#6366f1", "#14b8a6", "#f43f5e", "#0284c7", "#a855f7", "#8b5cf6", "#64748b", "#e11d48"];
 
-  const addRegion = useCallback((code: string) => {
-    if (compareRegions.length >= 8) return;
-    setCompareRegions((prev) => [...prev, code]);
-    setRegionSearch("");
-  }, [compareRegions.length]);
+  // Correlation matrix
+  const corrCatDef = DATA_CATEGORIES.find((c) => c.key === corrCat) ?? DATA_CATEGORIES[0];
+  const correlationMatrix = useMemo(() => {
+    const layers = corrCatDef.layers;
+    const matrix: { xLabel: string; yLabel: string; value: number }[] = [];
+    for (let i = 0; i < layers.length; i++) {
+      for (let j = 0; j < layers.length; j++) {
+        const xVals = regions.map((r) => getRegionValue(r, layers[i].key));
+        const yVals = regions.map((r) => getRegionValue(r, layers[j].key));
+        const n = xVals.length;
+        let sx = 0, sy = 0, sxy = 0, sx2 = 0, sy2 = 0;
+        for (let k = 0; k < n; k++) {
+          sx += xVals[k]; sy += yVals[k]; sxy += xVals[k] * yVals[k];
+          sx2 += xVals[k] * xVals[k]; sy2 += yVals[k] * yVals[k];
+        }
+        const num = n * sxy - sx * sy;
+        const den = Math.sqrt((n * sx2 - sx * sx) * (n * sy2 - sy * sy));
+        matrix.push({ xLabel: layers[i].label, yLabel: layers[j].label, value: den > 0 ? num / den : 0 });
+      }
+    }
+    return { matrix, labels: layers.map((l) => l.label) };
+  }, [regions, corrCatDef]);
 
-  const removeRegion = useCallback((code: string) => {
-    setCompareRegions((prev) => prev.filter((c) => c !== code));
-  }, []);
+  // Composed chart data (dual-axis)
+  const composedData = useMemo(() => {
+    const sorted = [...regions].sort((a, b) => getRegionValue(b, composedMetric1) - getRegionValue(a, composedMetric1)).slice(0, 20);
+    return sorted.map((r) => ({
+      name: r.name.length > 5 ? r.name.slice(0, 5) + "…" : r.name,
+      metric1: getRegionValue(r, composedMetric1),
+      metric2: getRegionValue(r, composedMetric2),
+    }));
+  }, [regions, composedMetric1, composedMetric2]);
 
-  const tooltipStyle = {
-    background: "#fff",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    fontSize: "12px",
-    color: "#334155",
-    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.07)",
-  };
+  const xDef = getLayerDef(xKey);
+  const yDef = getLayerDef(yKey);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-[var(--text-tertiary)]">데이터 로딩 중...</div>
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><div className="text-[var(--text-tertiary)]">데이터 로딩 중...</div></div>;
   }
-
-  const xDef = getLayerDef(xAxis);
-  const yDef = getLayerDef(yAxis);
 
   return (
     <div className="min-h-screen bg-[var(--bg-secondary)]">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">분석</h1>
-          <p className="text-sm text-[var(--text-tertiary)] mt-1">데이터 간 상관관계, 추세 분석 및 지역 비교</p>
+          <p className="text-sm text-[var(--text-tertiary)] mt-1">지표간 상관관계, 시계열 추세, 복합 차트 분석</p>
         </div>
 
-        {/* ── Regional Trend Comparison ── */}
-        <div className="bg-white rounded-xl border border-[var(--border)] p-4 md:p-5 shadow-sm mb-4">
-          <div className="flex flex-wrap items-start gap-4 mb-4">
-            <div>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">지역별 추세 비교</h3>
-              <p className="text-xs text-[var(--text-tertiary)] mt-0.5">최대 8개 지역의 26년간 변화를 비교합니다 (2000~2025)</p>
-            </div>
-            <div className="flex items-center gap-2 ml-auto">
-              <select
-                value={trendMetric}
-                onChange={(e) => setTrendMetric(e.target.value as DataLayerKey)}
-                className="text-xs border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-              >
-                {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label} ({l.unit})</option>)}
-              </select>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
+          {[
+            { key: "scatter" as const, label: "산점도 분석" },
+            { key: "trend" as const, label: "시계열 추세" },
+            { key: "correlation" as const, label: "상관관계 행렬" },
+            { key: "composed" as const, label: "복합 차트" },
+          ].map((tab) => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                activeTab === tab.key ? "bg-[var(--accent)] text-white shadow-sm" : "bg-white border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+              }`}
+            >{tab.label}</button>
+          ))}
+        </div>
 
-          {/* Region selector */}
-          <div className="mb-4">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              {compareRegions.map((code, i) => (
-                <span
-                  key={code}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white"
-                  style={{ backgroundColor: COMPARE_COLORS[i % COMPARE_COLORS.length] }}
-                >
-                  {regionNameMap.get(code) || code}
-                  <button onClick={() => removeRegion(code)} className="hover:opacity-70 -mr-0.5">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3l6 6M9 3l-6 6"/></svg>
-                  </button>
-                </span>
-              ))}
-              {compareRegions.length < 8 && (
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="지역 추가..."
-                    value={regionSearch}
-                    onChange={(e) => setRegionSearch(e.target.value)}
-                    className="px-3 py-1 border border-[var(--border)] rounded-lg text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] outline-none focus:border-[var(--accent)] w-36"
-                  />
-                  {searchResults.length > 0 && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-[var(--border)] rounded-lg shadow-lg z-20 py-1 max-h-48 overflow-y-auto">
-                      {searchResults.map((r) => (
-                        <button
-                          key={r.code}
-                          onClick={() => addRegion(r.code)}
-                          className="w-full px-3 py-1.5 text-left text-xs hover:bg-[var(--bg-secondary)] transition-colors flex items-center gap-2"
-                        >
-                          <span className="font-medium text-[var(--text-primary)]">{r.name}</span>
-                          <span className="text-[var(--text-tertiary)]">{r.province}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+        {activeTab === "scatter" && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[var(--text-tertiary)]">X축</span>
+                  <select value={xKey} onChange={(e) => setXKey(e.target.value as DataLayerKey)}
+                    className="text-sm border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]">
+                    {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+                  </select>
                 </div>
-              )}
-            </div>
-            {compareRegions.length === 0 && (
-              <p className="text-xs text-[var(--text-tertiary)]">
-                위 검색창에서 비교할 지역을 추가하세요. 예: 강남구, 해운대구, 수원시
-              </p>
-            )}
-          </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[var(--text-tertiary)]">Y축</span>
+                  <select value={yKey} onChange={(e) => setYKey(e.target.value as DataLayerKey)}
+                    className="text-sm border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]">
+                    {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+                  </select>
+                </div>
+                {regression && (
+                  <div className="flex items-center gap-3 ml-auto text-xs">
+                    <span className={`font-bold ${Math.abs(correlation) > 0.5 ? "text-[var(--accent)]" : Math.abs(correlation) > 0.3 ? "text-amber-500" : "text-[var(--text-tertiary)]"}`}>
+                      r = {correlation.toFixed(3)}
+                    </span>
+                    <span className="text-[var(--text-tertiary)]">R² = {regression.r2.toFixed(3)}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                      Math.abs(correlation) > 0.7 ? "bg-emerald-50 text-emerald-600" :
+                      Math.abs(correlation) > 0.4 ? "bg-blue-50 text-blue-600" :
+                      Math.abs(correlation) > 0.2 ? "bg-amber-50 text-amber-600" :
+                      "bg-gray-50 text-gray-500"
+                    }`}>
+                      {Math.abs(correlation) > 0.7 ? "강한 상관" : Math.abs(correlation) > 0.4 ? "보통 상관" : Math.abs(correlation) > 0.2 ? "약한 상관" : "무상관"}
+                    </span>
+                  </div>
+                )}
+              </div>
 
-          {/* Trend Chart */}
-          {compareRegions.length > 0 && trendCompareData.length > 0 ? (
-            <div className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendCompareData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <div className="h-[400px]">
+                <ResponsiveContainer>
+                  <ScatterChart margin={{ top: 10, right: 20, bottom: 30, left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis type="number" dataKey="x" name={xDef?.label} tick={{ fill: "#94a3b8", fontSize: 10 }}
+                      label={{ value: xDef?.label || "", position: "bottom", fill: "#64748b", fontSize: 11, offset: 15 }} />
+                    <YAxis type="number" dataKey="y" name={yDef?.label} tick={{ fill: "#94a3b8", fontSize: 10 }}
+                      label={{ value: yDef?.label || "", angle: -90, position: "insideLeft", fill: "#64748b", fontSize: 11, offset: -5 }} />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(v: number, name: string) => {
+                        const key = name === "x" ? xKey : yKey;
+                        return [formatLayerValue(v, key), name === "x" ? xDef?.label : yDef?.label];
+                      }}
+                      labelFormatter={(_, payload) => payload?.[0]?.payload?.name || ""}
+                    />
+                    <Scatter data={scatterData} shape="circle">
+                      {scatterData.map((d, i) => <Cell key={i} fill={getHealthColor(d.health)} opacity={0.7} r={4} />)}
+                    </Scatter>
+                    {regression && (
+                      <Scatter data={regression.line} shape={regressionDot} line={{ stroke: "#ef4444", strokeWidth: 2, strokeDasharray: "6 3" }} legendType="none" />
+                    )}
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Quick presets */}
+            <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
+              <h3 className="text-xs font-semibold text-[var(--text-tertiary)] mb-2">추천 분석 조합</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { x: "companyCount" as const, y: "employeeCount" as const, label: "사업체 vs 종사자" },
+                  { x: "population" as const, y: "grdp" as const, label: "인구 vs GRDP" },
+                  { x: "agingRate" as const, y: "closureRate" as const, label: "고령화 vs 폐업" },
+                  { x: "employmentRate" as const, y: "avgWage" as const, label: "고용률 vs 임금" },
+                  { x: "avgLandPrice" as const, y: "population" as const, label: "지가 vs 인구" },
+                  { x: "airQuality" as const, y: "greenAreaRatio" as const, label: "미세먼지 vs 녹지" },
+                  { x: "transitScore" as const, y: "aptPrice" as const, label: "교통접근성 vs 집값" },
+                  { x: "universityCount" as const, y: "youthRatio" as const, label: "대학 vs 청년비율" },
+                ].map((p) => (
+                  <button key={p.label} onClick={() => { setXKey(p.x); setYKey(p.y); }}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                      xKey === p.x && yKey === p.y ? "bg-[var(--accent-light)] text-[var(--accent)]" : "bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+                    }`}
+                  >{p.label}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "trend" && historicalData && (
+          <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <select value={trendMetric} onChange={(e) => setTrendMetric(e.target.value as DataLayerKey)}
+                className="text-sm border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]">
+                {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+              </select>
+              <div className="flex gap-1">
+                <button onClick={() => setTrendGrouping("national")}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium ${trendGrouping === "national" ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-secondary)] text-[var(--text-tertiary)]"}`}>
+                  전국 평균
+                </button>
+                <button onClick={() => setTrendGrouping("province")}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium ${trendGrouping === "province" ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-secondary)] text-[var(--text-tertiary)]"}`}>
+                  시도별
+                </button>
+              </div>
+            </div>
+
+            <div className="h-[400px]">
+              <ResponsiveContainer>
+                <LineChart data={trendData} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="year" tick={{ fill: "#94a3b8", fontSize: 11 }} />
                   <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    labelFormatter={(label) => `${label}년`}
-                    formatter={(value: number, name: string) => [
-                      formatLayerValue(value, trendMetric),
-                      regionNameMap.get(name) || name,
-                    ]}
-                  />
-                  <Legend
-                    formatter={(value: string) => regionNameMap.get(value) || value}
-                    wrapperStyle={{ fontSize: "12px", color: "#475569" }}
-                  />
-                  {compareRegions.map((code, i) => (
-                    <Line
-                      key={code}
-                      type="monotone"
-                      dataKey={code}
-                      name={code}
-                      stroke={COMPARE_COLORS[i % COMPARE_COLORS.length]}
-                      strokeWidth={2.5}
-                      dot={false}
-                      activeDot={{ r: 4, strokeWidth: 0 }}
-                    />
-                  ))}
+                  <Tooltip contentStyle={tooltipStyle} labelFormatter={(l) => `${l}년`}
+                    formatter={(v: number) => [formatLayerValue(v, trendMetric), getLayerDef(trendMetric)?.label]} />
+                  {trendGrouping === "national" ? (
+                    <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                  ) : (
+                    <>
+                      <Legend wrapperStyle={{ fontSize: 10 }} />
+                      {provinceKeys.slice(0, 17).map((k, i) => (
+                        <Line key={k} type="monotone" dataKey={k} stroke={PROV_COLORS[i % PROV_COLORS.length]} strokeWidth={1.5} dot={false} activeDot={{ r: 2 }} />
+                      ))}
+                    </>
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          ) : (
-            <div className="h-[200px] flex items-center justify-center border border-dashed border-[var(--border)] rounded-xl">
-              <div className="text-center">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" className="mx-auto mb-2"><path d="M3 3v18h18M7 16l4-4 4 4 6-6"/></svg>
-                <p className="text-sm text-[var(--text-tertiary)]">지역을 추가하면 추세 그래프가 표시됩니다</p>
+          </div>
+        )}
+
+        {activeTab === "correlation" && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)]">상관관계 행렬</h3>
+                <div className="flex gap-1">
+                  {DATA_CATEGORIES.map((cat) => (
+                    <button key={cat.key} onClick={() => setCorrCat(cat.key)}
+                      className={`px-2 py-1 rounded text-[10px] font-medium ${corrCat === cat.key ? "bg-[var(--accent)] text-white" : "bg-[var(--bg-secondary)] text-[var(--text-tertiary)]"}`}>
+                      {cat.icon} {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Heatmap */}
+              <div className="overflow-x-auto">
+                <div className="inline-block">
+                  <div className="flex">
+                    <div className="w-20 flex-shrink-0" />
+                    {correlationMatrix.labels.map((label) => (
+                      <div key={label} className="w-16 text-center text-[9px] text-[var(--text-tertiary)] font-medium px-0.5 truncate" title={label}>{label}</div>
+                    ))}
+                  </div>
+                  {correlationMatrix.labels.map((yLabel, yi) => (
+                    <div key={yLabel} className="flex items-center">
+                      <div className="w-20 text-right pr-2 text-[9px] text-[var(--text-tertiary)] font-medium truncate flex-shrink-0">{yLabel}</div>
+                      {correlationMatrix.labels.map((xLabel, xi) => {
+                        const entry = correlationMatrix.matrix[yi * correlationMatrix.labels.length + xi];
+                        const val = entry?.value ?? 0;
+                        const absVal = Math.abs(val);
+                        const bg = val > 0
+                          ? `rgba(37, 99, 235, ${absVal * 0.7})`
+                          : `rgba(220, 38, 38, ${absVal * 0.7})`;
+                        return (
+                          <div key={xLabel} className="w-16 h-12 flex items-center justify-center border border-white/50 cursor-default"
+                            title={`${yLabel} × ${xLabel}: ${val.toFixed(3)}`}
+                            style={{ backgroundColor: bg }}
+                            onClick={() => {
+                              const xLayerKey = corrCatDef.layers[xi]?.key;
+                              const yLayerKey = corrCatDef.layers[yi]?.key;
+                              if (xLayerKey && yLayerKey) { setXKey(xLayerKey); setYKey(yLayerKey); setActiveTab("scatter"); }
+                            }}
+                          >
+                            <span className={`text-[10px] font-bold ${absVal > 0.4 ? "text-white" : "text-[var(--text-secondary)]"}`}>
+                              {val.toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-4 mt-3">
+                <div className="flex items-center gap-1.5 text-[10px]">
+                  <div className="w-12 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgba(220,38,38,0.7), rgba(220,38,38,0), rgba(37,99,235,0), rgba(37,99,235,0.7))" }} />
+                  <span className="text-[var(--text-tertiary)]">-1.0 (역상관) ↔ +1.0 (정상관)</span>
+                </div>
+                <span className="text-[9px] text-[var(--text-tertiary)]">셀 클릭 → 산점도 분석</span>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Quick add popular regions */}
-          {compareRegions.length === 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <span className="text-[11px] text-[var(--text-tertiary)] self-center mr-1">빠른 추가:</span>
+        {activeTab === "composed" && (
+          <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[var(--text-tertiary)]">막대 (좌측)</span>
+                <select value={composedMetric1} onChange={(e) => setComposedMetric1(e.target.value as DataLayerKey)}
+                  className="text-sm border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none">
+                  {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[var(--text-tertiary)]">선 (우측)</span>
+                <select value={composedMetric2} onChange={(e) => setComposedMetric2(e.target.value as DataLayerKey)}
+                  className="text-sm border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none">
+                  {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="h-[400px]">
+              <ResponsiveContainer>
+                <ComposedChart data={composedData} margin={{ top: 10, right: 40, bottom: 30, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 9 }} angle={-45} textAnchor="end" height={50} />
+                  <YAxis yAxisId="left" tick={{ fill: "#2563eb", fontSize: 10 }} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fill: "#dc2626", fontSize: 10 }} />
+                  <Tooltip contentStyle={tooltipStyle}
+                    formatter={(v: number, name: string) => {
+                      const key = name === "metric1" ? composedMetric1 : composedMetric2;
+                      return [formatLayerValue(v, key), getLayerDef(key)?.label];
+                    }}
+                  />
+                  <Legend formatter={(value: string) => value === "metric1" ? getLayerDef(composedMetric1)?.label : getLayerDef(composedMetric2)?.label} wrapperStyle={{ fontSize: 11 }} />
+                  <Bar yAxisId="left" dataKey="metric1" fill="#2563eb" opacity={0.7} radius={[3, 3, 0, 0]} />
+                  <Line yAxisId="right" type="monotone" dataKey="metric2" stroke="#dc2626" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="text-[10px] text-[var(--text-tertiary)]">추천:</span>
               {[
-                { code: "11230", name: "강남구" },
-                { code: "21090", name: "해운대구" },
-                { code: "31011", name: "수원시장안구" },
-                { code: "11030", name: "용산구" },
-                { code: "11010", name: "종로구" },
-              ].filter((q) => regions.some((r) => r.code === q.code)).map((q) => (
-                <button
-                  key={q.code}
-                  onClick={() => addRegion(q.code)}
-                  className="px-2.5 py-1 rounded-lg text-[11px] font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
-                >
-                  + {q.name}
-                </button>
+                { m1: "companyCount" as const, m2: "employeeCount" as const, label: "사업체 + 종사자" },
+                { m1: "grdp" as const, m2: "taxRevenue" as const, label: "GRDP + 세수" },
+                { m1: "population" as const, m2: "agingRate" as const, label: "인구 + 고령화" },
+                { m1: "aptPrice" as const, m2: "avgLandPrice" as const, label: "아파트가 + 지가" },
+              ].map((p) => (
+                <button key={p.label} onClick={() => { setComposedMetric1(p.m1); setComposedMetric2(p.m2); }}
+                  className="px-2 py-0.5 rounded text-[10px] bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]">{p.label}</button>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* ── Scatter Plot ── */}
-        <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm mb-4">
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">상관관계 분석</h3>
-            <div className="flex items-center gap-2 ml-auto flex-wrap">
-              <label className="text-[11px] text-[var(--text-tertiary)]">X축</label>
-              <select
-                value={xAxis}
-                onChange={(e) => setXAxis(e.target.value as DataLayerKey)}
-                className="text-xs border border-[var(--border)] rounded-lg px-2 py-1 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-              >
-                {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
-              </select>
-              <label className="text-[11px] text-[var(--text-tertiary)]">Y축</label>
-              <select
-                value={yAxis}
-                onChange={(e) => setYAxis(e.target.value as DataLayerKey)}
-                className="text-xs border border-[var(--border)] rounded-lg px-2 py-1 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-              >
-                {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
-              </select>
-              <select
-                value={selectedProvince || ""}
-                onChange={(e) => setSelectedProvince(e.target.value || null)}
-                className="text-xs border border-[var(--border)] rounded-lg px-2 py-1 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-              >
-                <option value="">전국</option>
-                {Object.entries(PROVINCE_SHORT).map(([code, name]) => (
-                  <option key={code} value={code}>{name}</option>
-                ))}
-              </select>
-            </div>
           </div>
-          <div className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis type="number" dataKey="x" name={xDef?.label} tick={{ fill: "#94a3b8", fontSize: 10 }} label={{ value: xDef?.label, position: "bottom", fill: "#94a3b8", fontSize: 11 }} />
-                <YAxis type="number" dataKey="y" name={yDef?.label} tick={{ fill: "#94a3b8", fontSize: 10 }} label={{ value: yDef?.label, angle: -90, position: "insideLeft", fill: "#94a3b8", fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  formatter={(value: number, name: string) => [
-                    name === "x" ? formatLayerValue(value, xAxis) : formatLayerValue(value, yAxis),
-                    name === "x" ? xDef?.label : yDef?.label,
-                  ]}
-                  labelFormatter={(_, payload) => payload?.[0]?.payload?.name || ""}
-                />
-                <Scatter data={scatterData}>
-                  {scatterData.map((d, i) => (
-                    <Cell key={i} fill={getHealthColor(d.health)} opacity={0.7} />
-                  ))}
-                </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* ── National Trends ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">전국 평균 건강도 추이</h3>
-            <div className="h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={nationalTrend} margin={{ top: 4, right: 12, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="healthGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#2563eb" stopOpacity={0.15} />
-                      <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="year" tick={{ fill: "#94a3b8", fontSize: 10 }} />
-                  <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} domain={[40, 80]} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v.toFixed(1) + "점", "평균 건강도"]} labelFormatter={(l) => `${l}년`} />
-                  <Area type="monotone" dataKey="avgHealth" stroke="#2563eb" strokeWidth={2} fill="url(#healthGrad)" dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">전국 기업 수 추이</h3>
-            <div className="h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={nationalTrend} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="companyGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.15} />
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="year" tick={{ fill: "#94a3b8", fontSize: 10 }} />
-                  <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} tickFormatter={(v) => `${(v / 10000).toFixed(0)}만`} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [(v / 10000).toFixed(1) + "만개", "기업 수"]} labelFormatter={(l) => `${l}년`} />
-                  <Area type="monotone" dataKey="totalCompany" stroke="#8b5cf6" strokeWidth={2} fill="url(#companyGrad)" dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Province Comparison ── */}
-        <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">광역시도별 평균 건강도 비교</h3>
-          <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={provinceComparison} margin={{ top: 4, right: 12, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="name" tick={{ fill: "#475569", fontSize: 10 }} />
-                <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v.toFixed(1) + "점", "평균 건강도"]} />
-                <Bar dataKey="avgHealth" name="평균 건강도" radius={[4, 4, 0, 0]}>
-                  {provinceComparison.map((p, i) => (
-                    <Cell key={i} fill={getHealthColor(p.avgHealth)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

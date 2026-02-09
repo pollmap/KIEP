@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { RegionData } from "@/lib/types";
+import { RegionData, HistoricalData } from "@/lib/types";
 import { getHealthColor, DATA_CATEGORIES, DataCategory, DataLayerKey, getRegionValue, formatLayerValue, getLayerDef } from "@/lib/constants";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
+  LineChart, Line,
 } from "recharts";
 
 const COLORS = ["#2563eb", "#dc2626", "#16a34a", "#d97706"];
@@ -18,17 +19,27 @@ const tooltipStyle = {
 
 export default function ComparePage() {
   const [regions, setRegions] = useState<RegionData[]>([]);
+  const [historicalData, setHistoricalData] = useState<HistoricalData | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState<DataCategory>("industry");
   const [compareLayer, setCompareLayer] = useState<DataLayerKey>("healthScore");
+  const [trendMetric, setTrendMetric] = useState<DataLayerKey>("healthScore");
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data/sample-regions.json`)
-      .then((r) => r.json())
-      .then(setRegions)
-      .catch((err) => console.error("Failed to load regions:", err));
+    const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    Promise.all([
+      fetch(`${base}/data/sample-regions.json`).then((r) => r.json()),
+      fetch(`${base}/data/sample-historical.json`).then((r) => r.json()),
+    ])
+      .then(([regionData, histData]) => {
+        setRegions(regionData);
+        setHistoricalData(histData);
+      })
+      .catch((err) => console.error("Failed to load:", err));
   }, []);
+
+  const allLayers = useMemo(() => DATA_CATEGORIES.flatMap((c) => c.layers), []);
 
   const selectedRegions = useMemo(
     () => selectedCodes.map((c) => regions.find((r) => r.code === c)).filter(Boolean) as RegionData[],
@@ -76,6 +87,50 @@ export default function ComparePage() {
     }));
   }, [selectedRegions, compareLayer]);
 
+  // Percentile computation
+  const getPercentile = useMemo(() => {
+    return (layerKey: DataLayerKey, value: number) => {
+      const allVals = [...regions.map((r) => getRegionValue(r, layerKey))].sort((a, b) => a - b);
+      const idx = allVals.findIndex((v) => v >= value);
+      return idx >= 0 ? Math.round((idx / allVals.length) * 100) : 100;
+    };
+  }, [regions]);
+
+  // Strength/weakness analysis per region
+  const strengthWeakness = useMemo(() => {
+    return selectedRegions.map((r) => {
+      const scored = allLayers.map((l) => ({
+        ...l,
+        value: getRegionValue(r, l.key),
+        percentile: getPercentile(l.key, getRegionValue(r, l.key)),
+      }));
+      scored.sort((a, b) => b.percentile - a.percentile);
+      return {
+        code: r.code,
+        name: r.name,
+        strengths: scored.slice(0, 3),
+        weaknesses: scored.slice(-3).reverse(),
+      };
+    });
+  }, [selectedRegions, allLayers, getPercentile]);
+
+  // Historical trend comparison
+  const trendData = useMemo(() => {
+    if (!historicalData || selectedRegions.length === 0) return [];
+    const years = historicalData.endYear - historicalData.startYear + 1;
+    return Array.from({ length: years }, (_, i) => {
+      const year = historicalData.startYear + i;
+      const row: Record<string, number> = { year };
+      selectedRegions.forEach((r) => {
+        const hist = historicalData.data[r.code];
+        if (hist && hist[i]) {
+          row[r.code] = hist[i][trendMetric] ?? 0;
+        }
+      });
+      return row;
+    });
+  }, [historicalData, selectedRegions, trendMetric]);
+
   return (
     <div className="min-h-[calc(100vh-var(--nav-height))] bg-[var(--bg-secondary)]">
       <div className="max-w-6xl mx-auto p-4 md:p-6">
@@ -88,6 +143,7 @@ export default function ComparePage() {
             <div key={r.code} className="flex items-center gap-1.5 bg-white border border-[var(--border)] rounded-full px-3 py-1.5 shadow-sm">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
               <span className="text-sm text-[var(--text-primary)]">{r.name}</span>
+              <span className="text-[10px] text-[var(--text-tertiary)]" style={{ color: getHealthColor(r.healthScore) }}>{r.healthScore.toFixed(0)}</span>
               <button onClick={() => removeRegion(r.code)} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] ml-1 text-xs">x</button>
             </div>
           ))}
@@ -133,45 +189,114 @@ export default function ComparePage() {
         </div>
 
         {selectedRegions.length >= 2 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-            {/* Radar Chart */}
-            <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">{catDef.icon} {catDef.label} 다차원 비교</h3>
-              <div className="h-[300px] md:h-[350px]">
-                <ResponsiveContainer>
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="#e2e8f0" />
-                    <PolarAngleAxis dataKey="axis" tick={{ fill: "#64748b", fontSize: 10 }} />
-                    <PolarRadiusAxis domain={[0, 100]} tick={{ fill: "#94a3b8", fontSize: 9 }} />
-                    {selectedRegions.map((r, i) => (
-                      <Radar key={r.code} name={r.name} dataKey={r.name} stroke={COLORS[i]} fill={COLORS[i]} fillOpacity={0.15} strokeWidth={2} />
-                    ))}
-                    <Legend wrapperStyle={{ fontSize: 11, color: "#475569" }} />
-                  </RadarChart>
-                </ResponsiveContainer>
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-4">
+              {/* Radar Chart */}
+              <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">{catDef.icon} {catDef.label} 다차원 비교</h3>
+                <div className="h-[300px] md:h-[350px]">
+                  <ResponsiveContainer>
+                    <RadarChart data={radarData}>
+                      <PolarGrid stroke="#e2e8f0" />
+                      <PolarAngleAxis dataKey="axis" tick={{ fill: "#64748b", fontSize: 10 }} />
+                      <PolarRadiusAxis domain={[0, 100]} tick={{ fill: "#94a3b8", fontSize: 9 }} />
+                      {selectedRegions.map((r, i) => (
+                        <Radar key={r.code} name={r.name} dataKey={r.name} stroke={COLORS[i]} fill={COLORS[i]} fillOpacity={0.15} strokeWidth={2} />
+                      ))}
+                      <Legend wrapperStyle={{ fontSize: 11, color: "#475569" }} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
+
+              {/* Bar Chart for selected layer */}
+              <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">{compareLayerDef?.label ?? "건강도"} 비교</h3>
+                <div className="h-[300px] md:h-[350px]">
+                  <ResponsiveContainer>
+                    <BarChart data={barData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [formatLayerValue(v, compareLayer), compareLayerDef?.label]} />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {barData.map((d, i) => <Cell key={i} fill={COLORS[i]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Trend Comparison */}
+              {historicalData && (
+                <div className="lg:col-span-2 bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">추세 비교 (2000~2025)</h3>
+                    <select
+                      value={trendMetric}
+                      onChange={(e) => setTrendMetric(e.target.value as DataLayerKey)}
+                      className="text-xs border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                    >
+                      {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="h-[280px]">
+                    <ResponsiveContainer>
+                      <LineChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <XAxis dataKey="year" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                        <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                        <Tooltip
+                          contentStyle={tooltipStyle}
+                          labelFormatter={(l) => `${l}년`}
+                          formatter={(v: number, name: string) => {
+                            const r = regions.find((r) => r.code === name);
+                            return [formatLayerValue(v, trendMetric), r?.name || name];
+                          }}
+                        />
+                        <Legend formatter={(value: string) => regions.find((r) => r.code === value)?.name || value} wrapperStyle={{ fontSize: 11 }} />
+                        {selectedRegions.map((r, i) => (
+                          <Line key={r.code} type="monotone" dataKey={r.code} stroke={COLORS[i]} strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                        ))}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Bar Chart for selected layer */}
-            <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">{compareLayerDef?.label ?? "건강도"} 비교</h3>
-              <div className="h-[300px] md:h-[350px]">
-                <ResponsiveContainer>
-                  <BarChart data={barData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
-                    <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [formatLayerValue(v, compareLayer), compareLayerDef?.label]} />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {barData.map((d, i) => <Cell key={i} fill={COLORS[i]} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            {/* Strength / Weakness Analysis */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+              {strengthWeakness.map((sw, idx) => (
+                <div key={sw.code} className="bg-white border border-[var(--border)] rounded-xl p-3 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[idx] }} />
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{sw.name}</span>
+                  </div>
+                  <div className="space-y-1 mb-2">
+                    <div className="text-[9px] text-[var(--text-tertiary)] font-medium">강점</div>
+                    {sw.strengths.map((s) => (
+                      <div key={s.key} className="flex items-center gap-1 text-[10px]">
+                        <span className="text-emerald-500 font-bold">P{s.percentile}</span>
+                        <span className="text-[var(--text-secondary)] flex-1 truncate">{s.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-[9px] text-[var(--text-tertiary)] font-medium">약점</div>
+                    {sw.weaknesses.map((w) => (
+                      <div key={w.key} className="flex items-center gap-1 text-[10px]">
+                        <span className="text-red-500 font-bold">P{w.percentile}</span>
+                        <span className="text-[var(--text-secondary)] flex-1 truncate">{w.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Full Comparison Table */}
-            <div className="lg:col-span-2 bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
+            <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">{catDef.icon} {catDef.label} 상세 비교</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -179,7 +304,9 @@ export default function ComparePage() {
                     <tr className="border-b border-[var(--border)]">
                       <th className="py-2 px-3 text-left text-[var(--text-tertiary)] font-medium text-xs">지표</th>
                       {selectedRegions.map((r, i) => (
-                        <th key={r.code} className="py-2 px-3 text-right font-medium text-xs" style={{ color: COLORS[i] }}>{r.name}</th>
+                        <th key={r.code} className="py-2 px-3 text-right font-medium text-xs" style={{ color: COLORS[i] }}>
+                          <div>{r.name}</div>
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -193,9 +320,21 @@ export default function ComparePage() {
                           {selectedRegions.map((r, i) => {
                             const v = getRegionValue(r, layer.key);
                             const isBest = v === maxV && vals.filter((x) => x === maxV).length === 1;
+                            const pct = getPercentile(layer.key, v);
                             return (
-                              <td key={r.code} className={`py-2 px-3 text-right text-xs ${isBest ? "font-bold text-[var(--accent)]" : "text-[var(--text-primary)]"}`}>
-                                {formatLayerValue(v, layer.key)}
+                              <td key={r.code} className="py-2 px-3 text-right text-xs">
+                                <div className={`${isBest ? "font-bold text-[var(--accent)]" : "text-[var(--text-primary)]"}`}>
+                                  {formatLayerValue(v, layer.key)}
+                                </div>
+                                <span className={`text-[9px] font-medium px-1 py-0.5 rounded ${
+                                  pct >= 80 ? "text-emerald-600 bg-emerald-50"
+                                  : pct >= 60 ? "text-blue-600 bg-blue-50"
+                                  : pct >= 40 ? "text-amber-600 bg-amber-50"
+                                  : pct >= 20 ? "text-orange-600 bg-orange-50"
+                                  : "text-red-600 bg-red-50"
+                                }`}>
+                                  P{pct}
+                                </span>
                               </td>
                             );
                           })}
@@ -217,7 +356,7 @@ export default function ComparePage() {
                 </table>
               </div>
             </div>
-          </div>
+          </>
         ) : (
           <div className="text-center py-16 md:py-20 text-[var(--text-tertiary)]">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-4 opacity-40"><path d="M8 7h8M8 12h8M8 17h8"/></svg>

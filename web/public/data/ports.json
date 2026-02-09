@@ -3,7 +3,7 @@
   "features": [
     {
       "type": "Feature",
-      "properties": { "name": "부산항", "type": "international", "cargo": 22000000, "icon": "port" },
+      "properties": { "name": "부산항", "type": "national", "cargo": 22000000, "icon": "port", "portClass": "무역항", "region": "부산광역시" },
       "geometry": {
         "type": "Point",
         "coordinates": [129.050, 35.080]
@@ -11,7 +11,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "인천항", "type": "international", "cargo": 3200000, "icon": "port" },
+      "properties": { "name": "인천항", "type": "national", "cargo": 3200000, "icon": "port", "portClass": "무역항", "region": "인천광역시" },
       "geometry": {
         "type": "Point",
         "coordinates": [126.605, 37.440]
@@ -19,7 +19,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "울산항", "type": "international", "cargo": 2100000, "icon": "port" },
+      "properties": { "name": "울산항", "type": "national", "cargo": 2100000, "icon": "port", "portClass": "무역항", "region": "울산광역시" },
       "geometry": {
         "type": "Point",
         "coordinates": [129.385, 35.490]
@@ -27,7 +27,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "광양항", "type": "international", "cargo": 2700000, "icon": "port" },
+      "properties": { "name": "광양항", "type": "national", "cargo": 2700000, "icon": "port", "portClass": "무역항", "region": "전라남도" },
       "geometry": {
         "type": "Point",
         "coordinates": [127.738, 34.915]
@@ -35,7 +35,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "평택당진항", "type": "international", "cargo": 1500000, "icon": "port" },
+      "properties": { "name": "평택당진항", "type": "national", "cargo": 1500000, "icon": "port", "portClass": "무역항", "region": "충청남도/경기도" },
       "geometry": {
         "type": "Point",
         "coordinates": [126.837, 36.933]
@@ -43,7 +43,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "목포항", "type": "international", "cargo": 400000, "icon": "port" },
+      "properties": { "name": "목포항", "type": "national", "cargo": 400000, "icon": "port", "portClass": "무역항", "region": "전라남도" },
       "geometry": {
         "type": "Point",
         "coordinates": [126.379, 34.787]
@@ -51,7 +51,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "마산항", "type": "national", "cargo": 350000, "icon": "port" },
+      "properties": { "name": "마산항", "type": "national", "cargo": 350000, "icon": "port", "portClass": "무역항", "region": "경상남도" },
       "geometry": {
         "type": "Point",
         "coordinates": [128.567, 35.182]
@@ -59,7 +59,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "동해항", "type": "national", "cargo": 300000, "icon": "port" },
+      "properties": { "name": "동해묵호항", "type": "national", "cargo": 300000, "icon": "port", "portClass": "무역항", "region": "강원특별자치도" },
       "geometry": {
         "type": "Point",
         "coordinates": [129.135, 37.490]
@@ -67,23 +67,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "속초항", "type": "national", "cargo": 100000, "icon": "port" },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [128.600, 38.200]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { "name": "제주항", "type": "national", "cargo": 200000, "icon": "port" },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [126.520, 33.518]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { "name": "군산항", "type": "national", "cargo": 450000, "icon": "port" },
+      "properties": { "name": "군산항", "type": "national", "cargo": 450000, "icon": "port", "portClass": "무역항", "region": "전북특별자치도" },
       "geometry": {
         "type": "Point",
         "coordinates": [126.560, 35.983]
@@ -91,7 +75,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "포항항", "type": "national", "cargo": 500000, "icon": "port" },
+      "properties": { "name": "포항항", "type": "national", "cargo": 500000, "icon": "port", "portClass": "무역항", "region": "경상북도" },
       "geometry": {
         "type": "Point",
         "coordinates": [129.388, 36.030]
@@ -99,7 +83,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "여수항", "type": "national", "cargo": 600000, "icon": "port" },
+      "properties": { "name": "여수항", "type": "national", "cargo": 600000, "icon": "port", "portClass": "무역항", "region": "전라남도" },
       "geometry": {
         "type": "Point",
         "coordinates": [127.690, 34.740]
@@ -107,15 +91,31 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "서귀포항", "type": "local", "cargo": 50000, "icon": "port" },
+      "properties": { "name": "대산항", "type": "national", "cargo": 800000, "icon": "port", "portClass": "무역항", "region": "충청남도" },
       "geometry": {
         "type": "Point",
-        "coordinates": [126.560, 33.245]
+        "coordinates": [126.35, 36.92]
       }
     },
     {
       "type": "Feature",
-      "properties": { "name": "완도항", "type": "national", "cargo": 100000, "icon": "port" },
+      "properties": { "name": "제주항", "type": "national", "cargo": 200000, "icon": "port", "portClass": "무역항", "region": "제주특별자치도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.520, 33.518]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "속초항", "type": "national", "cargo": 100000, "icon": "port", "portClass": "무역항", "region": "강원특별자치도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.600, 38.200]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "완도항", "type": "local", "cargo": 100000, "icon": "port", "portClass": "연안항", "region": "전라남도" },
       "geometry": {
         "type": "Point",
         "coordinates": [126.755, 34.310]
@@ -123,10 +123,130 @@
     },
     {
       "type": "Feature",
-      "properties": { "name": "통영항", "type": "national", "cargo": 80000, "icon": "port" },
+      "properties": { "name": "통영항", "type": "local", "cargo": 80000, "icon": "port", "portClass": "연안항", "region": "경상남도" },
       "geometry": {
         "type": "Point",
         "coordinates": [128.425, 34.843]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "서귀포항", "type": "local", "cargo": 50000, "icon": "port", "portClass": "연안항", "region": "제주특별자치도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.560, 33.245]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "삼천포항", "type": "local", "cargo": 60000, "icon": "port", "portClass": "연안항", "region": "경상남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.065, 34.920]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "장항항", "type": "local", "cargo": 70000, "icon": "port", "portClass": "연안항", "region": "충청남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.685, 36.010]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "옥포항", "type": "local", "cargo": 45000, "icon": "port", "portClass": "연안항", "region": "경상남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.735, 34.885]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "삼척항", "type": "local", "cargo": 35000, "icon": "port", "portClass": "연안항", "region": "강원특별자치도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.180, 37.430]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "보령항", "type": "local", "cargo": 40000, "icon": "port", "portClass": "연안항", "region": "충청남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.505, 36.325]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "태안항", "type": "local", "cargo": 25000, "icon": "port", "portClass": "연안항", "region": "충청남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.29, 36.74]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "진도항", "type": "local", "cargo": 30000, "icon": "port", "portClass": "연안항", "region": "전라남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.260, 34.480]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "고흥항", "type": "local", "cargo": 20000, "icon": "port", "portClass": "연안항", "region": "전라남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.290, 34.500]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "흑산도항", "type": "local", "cargo": 8000, "icon": "port", "portClass": "연안항", "region": "전라남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.435, 34.684]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "거문도항", "type": "local", "cargo": 5000, "icon": "port", "portClass": "연안항", "region": "전라남도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.308, 34.028]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "울릉항", "type": "local", "cargo": 15000, "icon": "port", "portClass": "연안항", "region": "경상북도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [130.905, 37.485]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "추자항", "type": "local", "cargo": 3000, "icon": "port", "portClass": "연안항", "region": "제주특별자치도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.293, 33.946]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "강구항", "type": "local", "cargo": 25000, "icon": "port", "portClass": "연안항", "region": "경상북도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.380, 36.340]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "구룡포항", "type": "local", "cargo": 20000, "icon": "port", "portClass": "연안항", "region": "경상북도" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.555, 35.980]
       }
     }
   ]
