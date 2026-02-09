@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import Navigation from "@/components/Layout/Navigation";
-import { RegionData } from "@/lib/types";
 import { PROVINCES, getHealthColor } from "@/lib/constants";
 
 interface ComplexData {
@@ -20,7 +18,6 @@ interface ComplexData {
   healthScore: number;
 }
 
-// Generate sample complex data
 function generateComplexData(): ComplexData[] {
   let seed = 123;
   const random = () => {
@@ -91,117 +88,113 @@ export default function ComplexPage() {
   }), [filtered]);
 
   return (
-    <div className="w-screen h-screen bg-[var(--background)] flex flex-col">
-      <Navigation />
-
-      <div className="flex-1 pt-14 flex overflow-hidden">
-        {/* Left: List */}
-        <div className="w-[400px] border-r border-[var(--panel-border)] flex flex-col">
-          <div className="p-4 border-b border-[var(--panel-border)]">
-            <h1 className="text-lg font-bold mb-3">산업단지 현황</h1>
-            <input
-              type="text"
-              placeholder="산업단지 검색..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-1.5 bg-black/30 border border-[var(--panel-border)] rounded text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50 mb-2"
-            />
-            <div className="flex gap-1">
-              {[null, "국가", "일반", "도시첨단", "농공"].map((t) => (
-                <button
-                  key={t ?? "all"}
-                  onClick={() => setTypeFilter(t)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                    typeFilter === t
-                      ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                      : "text-gray-500 hover:text-gray-300 border border-transparent"
-                  }`}
-                >
-                  {t ?? "전체"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-px bg-[var(--panel-border)]">
-            <div className="bg-[var(--panel-bg)] p-3 text-center">
-              <div className="text-[10px] text-gray-500">단지수</div>
-              <div className="text-lg font-bold">{totalStats.count}</div>
-            </div>
-            <div className="bg-[var(--panel-bg)] p-3 text-center">
-              <div className="text-[10px] text-gray-500">총 고용</div>
-              <div className="text-lg font-bold">{(totalStats.employment / 10000).toFixed(1)}만</div>
-            </div>
-            <div className="bg-[var(--panel-bg)] p-3 text-center">
-              <div className="text-[10px] text-gray-500">총 생산</div>
-              <div className="text-lg font-bold">{(totalStats.production / 10000).toFixed(0)}조</div>
-            </div>
-          </div>
-
-          {/* List */}
-          <div className="flex-1 overflow-y-auto">
-            {filtered.map((c) => (
+    <div className="h-[calc(100vh-var(--nav-height))] flex overflow-hidden">
+      {/* Left: List */}
+      <div className="w-[400px] border-r border-[var(--border)] flex flex-col bg-white">
+        <div className="p-4 border-b border-[var(--border)]">
+          <h1 className="text-lg font-bold text-[var(--text-primary)] mb-3">산업단지 현황</h1>
+          <input
+            type="text"
+            placeholder="산업단지 검색..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] outline-none focus:border-[var(--accent)] mb-2"
+          />
+          <div className="flex gap-1">
+            {[null, "국가", "일반", "도시첨단", "농공"].map((t) => (
               <button
-                key={c.id}
-                onClick={() => setSelected(c)}
-                className={`w-full px-4 py-3 text-left border-b border-[var(--panel-border)]/50 transition-colors ${
-                  selected?.id === c.id ? "bg-blue-500/10" : "hover:bg-white/5"
+                key={t ?? "all"}
+                onClick={() => setTypeFilter(t)}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  typeFilter === t
+                    ? "bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent)]/30"
+                    : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] border border-transparent"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{c.name}</span>
-                  <span className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-white/5 rounded">{c.type}</span>
-                </div>
-                <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-500">
-                  <span>{c.province}</span>
-                  <span>입주 {c.tenantCount}</span>
-                  <span>고용 {c.employment.toLocaleString()}</span>
-                  <span style={{ color: getHealthColor(c.healthScore) }}>{c.healthScore}</span>
-                </div>
+                {t ?? "전체"}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Right: Detail */}
-        <div className="flex-1 overflow-y-auto">
-          {selected ? (
-            <div className="p-6 max-w-3xl">
-              <div className="flex items-center gap-3 mb-6">
-                <h2 className="text-2xl font-bold">{selected.name}</h2>
-                <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded">{selected.type}</span>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <StatCard label="입주업체" value={selected.tenantCount.toLocaleString()} unit="개" />
-                <StatCard label="가동업체" value={selected.operatingCount.toLocaleString()} unit="개" />
-                <StatCard label="분양률" value={selected.occupancyRate.toFixed(1)} unit="%" />
-                <StatCard label="건강도" value={selected.healthScore.toFixed(1)} unit="/100" color={getHealthColor(selected.healthScore)} />
-                <StatCard label="생산액" value={(selected.production / 100).toFixed(0)} unit="억원" />
-                <StatCard label="수출액" value={(selected.exportAmount / 1000).toFixed(1)} unit="백만$" />
-                <StatCard label="고용인원" value={selected.employment.toLocaleString()} unit="명" />
-                <StatCard label="가동률" value={((selected.operatingCount / selected.tenantCount) * 100).toFixed(1)} unit="%" />
-              </div>
-
-              <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg p-4">
-                <h3 className="text-sm font-medium mb-3">소재지 정보</h3>
-                <div className="grid grid-cols-2 gap-y-2 text-sm">
-                  <div className="text-gray-500">시도</div><div>{selected.province}</div>
-                  <div className="text-gray-500">유형</div><div>{selected.type}산업단지</div>
-                  <div className="text-gray-500">단지코드</div><div className="font-mono text-gray-400">{selected.id}</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-600">
-              <div className="text-center">
-                <div className="text-4xl mb-3">&loz;</div>
-                <div className="text-sm">산업단지를 선택하세요</div>
-              </div>
-            </div>
-          )}
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-px bg-[var(--border-light)]">
+          <div className="bg-white p-3 text-center">
+            <div className="text-[10px] text-[var(--text-tertiary)]">단지수</div>
+            <div className="text-lg font-bold text-[var(--text-primary)]">{totalStats.count}</div>
+          </div>
+          <div className="bg-white p-3 text-center">
+            <div className="text-[10px] text-[var(--text-tertiary)]">총 고용</div>
+            <div className="text-lg font-bold text-[var(--text-primary)]">{(totalStats.employment / 10000).toFixed(1)}만</div>
+          </div>
+          <div className="bg-white p-3 text-center">
+            <div className="text-[10px] text-[var(--text-tertiary)]">총 생산</div>
+            <div className="text-lg font-bold text-[var(--text-primary)]">{(totalStats.production / 10000).toFixed(0)}조</div>
+          </div>
         </div>
+
+        {/* List */}
+        <div className="flex-1 overflow-y-auto">
+          {filtered.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelected(c)}
+              className={`w-full px-4 py-3 text-left border-b border-[var(--border-light)] transition-colors ${
+                selected?.id === c.id ? "bg-[var(--accent-light)]" : "hover:bg-[var(--bg-secondary)]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-[var(--text-primary)]">{c.name}</span>
+                <span className="text-[10px] text-[var(--text-tertiary)] px-1.5 py-0.5 bg-[var(--bg-secondary)] rounded">{c.type}</span>
+              </div>
+              <div className="flex items-center gap-3 mt-1 text-[11px] text-[var(--text-tertiary)]">
+                <span>{c.province}</span>
+                <span>입주 {c.tenantCount}</span>
+                <span>고용 {c.employment.toLocaleString()}</span>
+                <span style={{ color: getHealthColor(c.healthScore) }}>{c.healthScore}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Right: Detail */}
+      <div className="flex-1 overflow-y-auto bg-[var(--bg-secondary)]">
+        {selected ? (
+          <div className="p-6 max-w-3xl">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)]">{selected.name}</h2>
+              <span className="text-xs text-[var(--text-tertiary)] bg-[var(--bg-secondary)] border border-[var(--border)] px-2 py-1 rounded">{selected.type}</span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <StatCard label="입주업체" value={selected.tenantCount.toLocaleString()} unit="개" />
+              <StatCard label="가동업체" value={selected.operatingCount.toLocaleString()} unit="개" />
+              <StatCard label="분양률" value={selected.occupancyRate.toFixed(1)} unit="%" />
+              <StatCard label="건강도" value={selected.healthScore.toFixed(1)} unit="/100" color={getHealthColor(selected.healthScore)} />
+              <StatCard label="생산액" value={(selected.production / 100).toFixed(0)} unit="억원" />
+              <StatCard label="수출액" value={(selected.exportAmount / 1000).toFixed(1)} unit="백만$" />
+              <StatCard label="고용인원" value={selected.employment.toLocaleString()} unit="명" />
+              <StatCard label="가동률" value={((selected.operatingCount / selected.tenantCount) * 100).toFixed(1)} unit="%" />
+            </div>
+
+            <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">소재지 정보</h3>
+              <div className="grid grid-cols-2 gap-y-2 text-sm">
+                <div className="text-[var(--text-tertiary)]">시도</div><div className="text-[var(--text-primary)]">{selected.province}</div>
+                <div className="text-[var(--text-tertiary)]">유형</div><div className="text-[var(--text-primary)]">{selected.type}산업단지</div>
+                <div className="text-[var(--text-tertiary)]">단지코드</div><div className="font-mono text-[var(--text-secondary)]">{selected.id}</div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-[var(--text-tertiary)]">
+            <div className="text-center">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-3 opacity-40"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              <div className="text-sm">산업단지를 선택하세요</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -209,11 +202,11 @@ export default function ComplexPage() {
 
 function StatCard({ label, value, unit, color }: { label: string; value: string; unit: string; color?: string }) {
   return (
-    <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg p-3">
-      <div className="text-[10px] text-gray-500">{label}</div>
+    <div className="bg-white border border-[var(--border)] rounded-xl p-3 shadow-sm">
+      <div className="text-[10px] text-[var(--text-tertiary)]">{label}</div>
       <div className="flex items-baseline gap-1 mt-1">
-        <span className="text-xl font-bold" style={color ? { color } : undefined}>{value}</span>
-        <span className="text-[10px] text-gray-500">{unit}</span>
+        <span className="text-xl font-bold" style={{ color: color || "var(--text-primary)" }}>{value}</span>
+        <span className="text-[10px] text-[var(--text-tertiary)]">{unit}</span>
       </div>
     </div>
   );

@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useRef, useCallback, useMemo, useState, useImperativeHandle, forwardRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { RegionData } from "@/lib/types";
 import {
   KOREA_CENTER,
   getLayerColor,
-  getBasemapTiles,
-  MapLayerType,
-  BasemapStyle,
+  getRegionValue,
+  formatLayerValue,
+  getLayerDef,
+  BASEMAP_TILES,
+  DataLayerKey,
 } from "@/lib/constants";
 
 interface KoreaMapProps {
@@ -17,16 +19,19 @@ interface KoreaMapProps {
   geojson: GeoJSON.FeatureCollection | null;
   selectedRegion: string | null;
   onRegionSelect: (code: string | null) => void;
-  activeLayer: MapLayerType;
-  basemapStyle: BasemapStyle;
+  activeLayer: DataLayerKey;
+  showSubway?: boolean;
+  showRoads?: boolean;
 }
 
 export interface KoreaMapHandle {
   flyToRegion: (code: string) => void;
+  flyToProvince: (prefix: string) => void;
+  resetView: () => void;
 }
 
 const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
-  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, basemapStyle },
+  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, showSubway = false, showRoads = false },
   ref
 ) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -35,18 +40,32 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
   const [mapReady, setMapReady] = useState(false);
   const geojsonRef = useRef<GeoJSON.FeatureCollection | null>(null);
 
-  // Keep a ref of the latest geojson for flyTo
   useEffect(() => {
     geojsonRef.current = geojson;
   }, [geojson]);
 
-  const regionLookup = useCallback(() => {
+  const regionLookup = useMemo(() => {
     const m = new Map<string, RegionData>();
     regions.forEach((r) => m.set(r.code, r));
     return m;
   }, [regions]);
 
-  // Expose flyToRegion method
+  const calcBounds = useCallback((features: GeoJSON.Feature[]) => {
+    const bounds = new maplibregl.LngLatBounds();
+    const addCoords = (coords: unknown) => {
+      if (Array.isArray(coords) && typeof coords[0] === "number") {
+        bounds.extend(coords as [number, number]);
+      } else if (Array.isArray(coords)) {
+        coords.forEach((c) => addCoords(c));
+      }
+    };
+    features.forEach((f) => {
+      const geom = f.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
+      addCoords(geom.coordinates);
+    });
+    return bounds;
+  }, []);
+
   useImperativeHandle(ref, () => ({
     flyToRegion: (code: string) => {
       if (!map.current || !geojsonRef.current) return;
@@ -54,37 +73,31 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         (f) => f.properties?.code === code
       );
       if (!feature) return;
-
-      // Calculate centroid from geometry
-      const bounds = new maplibregl.LngLatBounds();
-      const addCoords = (coords: number[] | number[][] | number[][][] | number[][][][]) => {
-        if (typeof coords[0] === "number") {
-          bounds.extend(coords as [number, number]);
-        } else {
-          (coords as number[][]).forEach((c) => addCoords(c));
-        }
-      };
-      const geom = feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
-      if (geom.type === "Polygon") {
-        geom.coordinates.forEach((ring) => addCoords(ring));
-      } else if (geom.type === "MultiPolygon") {
-        geom.coordinates.forEach((poly) => poly.forEach((ring) => addCoords(ring)));
-      }
-
-      const center = bounds.getCenter();
+      const bounds = calcBounds([feature]);
+      map.current.fitBounds(bounds, { padding: 80, duration: 800, maxZoom: 11 });
+    },
+    flyToProvince: (prefix: string) => {
+      if (!map.current || !geojsonRef.current) return;
+      const features = geojsonRef.current.features.filter(
+        (f) => f.properties?.code?.startsWith(prefix)
+      );
+      if (!features.length) return;
+      const bounds = calcBounds(features);
+      map.current.fitBounds(bounds, { padding: 40, duration: 800 });
+    },
+    resetView: () => {
+      if (!map.current) return;
       map.current.flyTo({
-        center: [center.lng, center.lat],
-        zoom: Math.max(map.current.getZoom(), 9),
+        center: [KOREA_CENTER.longitude, KOREA_CENTER.latitude],
+        zoom: KOREA_CENTER.zoom,
         duration: 800,
       });
     },
-  }), []);
+  }), [calcBounds]);
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
-
-    const tiles = getBasemapTiles(basemapStyle);
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -93,9 +106,9 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         sources: {
           basemap: {
             type: "raster",
-            tiles: [tiles.url],
+            tiles: [BASEMAP_TILES.url],
             tileSize: 256,
-            attribution: tiles.attribution,
+            attribution: BASEMAP_TILES.attribution,
           },
         },
         layers: [
@@ -114,6 +127,11 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       maxZoom: 14,
     });
 
+    map.current.scrollZoom.enable();
+    map.current.doubleClickZoom.enable();
+    map.current.touchZoomRotate.enable();
+    map.current.dragPan.enable();
+
     map.current.addControl(new maplibregl.NavigationControl(), "bottom-right");
 
     popup.current = new maplibregl.Popup({
@@ -130,85 +148,27 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Switch basemap tiles
-  useEffect(() => {
-    if (!mapReady || !map.current) return;
-    const tiles = getBasemapTiles(basemapStyle);
-    const source = map.current.getSource("basemap") as maplibregl.RasterTileSource;
-    if (source) {
-      map.current.removeLayer("basemap-layer");
-      map.current.removeSource("basemap");
-      map.current.addSource("basemap", {
-        type: "raster",
-        tiles: [tiles.url],
-        tileSize: 256,
-        attribution: tiles.attribution,
-      });
-      const firstLayerId = map.current.getLayer("region-fills") ? "region-fills" : undefined;
-      map.current.addLayer(
-        { id: "basemap-layer", type: "raster", source: "basemap", minzoom: 0, maxzoom: 19 },
-        firstLayerId
-      );
-    }
-  }, [mapReady, basemapStyle]);
-
-  // Build color map for features
   const buildColorMap = useCallback(
-    (lookup: Map<string, RegionData>, layer: MapLayerType) => {
-      const allValues = regions.map((r) => {
-        switch (layer) {
-          case "healthScore": return r.healthScore;
-          case "companyCount": return r.companyCount;
-          case "employeeCount": return r.employeeCount;
-          case "growthRate": return r.growthRate;
-        }
-      });
+    (lookup: Map<string, RegionData>, layer: DataLayerKey) => {
+      const allValues = regions.map((r) => getRegionValue(r, layer));
 
       return (code: string): string => {
         const data = lookup.get(code);
         if (!data) return "#6b7280";
-        const value =
-          layer === "healthScore" ? data.healthScore :
-          layer === "companyCount" ? data.companyCount :
-          layer === "employeeCount" ? data.employeeCount :
-          data.growthRate;
+        const value = getRegionValue(data, layer);
         return getLayerColor(layer, value, allValues);
       };
     },
     [regions]
   );
 
-  // Format tooltip value
-  const formatValue = useCallback(
-    (data: RegionData, layer: MapLayerType): string => {
-      switch (layer) {
-        case "healthScore": return data.healthScore.toFixed(1);
-        case "companyCount": return data.companyCount.toLocaleString() + "개";
-        case "employeeCount": return data.employeeCount.toLocaleString() + "명";
-        case "growthRate": return (data.growthRate >= 0 ? "+" : "") + data.growthRate.toFixed(1) + "%";
-      }
-    },
-    []
-  );
-
-  const layerLabel = useCallback(
-    (layer: MapLayerType): string => {
-      switch (layer) {
-        case "healthScore": return "건강도";
-        case "companyCount": return "기업 수";
-        case "employeeCount": return "고용 인원";
-        case "growthRate": return "성장률";
-      }
-    },
-    []
-  );
-
   // Add/update GeoJSON layer
   useEffect(() => {
     if (!mapReady || !map.current || !geojson) return;
 
-    const lookup = regionLookup();
+    const lookup = regionLookup;
     const colorFn = buildColorMap(lookup, activeLayer);
+    const layerDef = getLayerDef(activeLayer);
 
     const enriched: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
@@ -219,10 +179,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
           ...f,
           properties: {
             ...f.properties,
-            healthScore: data?.healthScore ?? 50,
-            companyCount: data?.companyCount ?? 0,
-            employeeCount: data?.employeeCount ?? 0,
-            growthRate: data?.growthRate ?? 0,
             province: data?.province ?? "",
             fillColor: colorFn(code || ""),
           },
@@ -230,7 +186,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       }),
     };
 
-    // Remove existing layers
     ["region-highlight", "region-borders", "region-fills"].forEach((id) => {
       if (map.current?.getLayer(id)) map.current.removeLayer(id);
     });
@@ -247,8 +202,8 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         "fill-opacity": [
           "case",
           ["boolean", ["feature-state", "hover"], false],
-          0.88,
-          0.7,
+          0.85,
+          0.65,
         ],
       },
     });
@@ -261,8 +216,8 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         "line-color": [
           "case",
           ["boolean", ["feature-state", "hover"], false],
-          "#ffffff",
-          "rgba(255,255,255,0.25)",
+          "#475569",
+          "rgba(148,163,184,0.4)",
         ],
         "line-width": [
           "case",
@@ -277,11 +232,10 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       id: "region-highlight",
       type: "line",
       source: "regions",
-      paint: { "line-color": "#3b82f6", "line-width": 3 },
+      paint: { "line-color": "#2563eb", "line-width": 3 },
       filter: ["==", "code", ""],
     });
 
-    // Interactions
     let hoveredId: string | number | null = null;
 
     const onMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
@@ -301,14 +255,16 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       }
 
       if (popup.current && data) {
+        const value = getRegionValue(data, activeLayer);
+        const formatted = formatLayerValue(value, activeLayer);
         popup.current
           .setLngLat(e.lngLat)
           .setHTML(
             `<div style="font-size:13px;line-height:1.6">
               <strong>${data.name}</strong>
-              <span style="color:#999;font-size:11px;margin-left:4px">${data.province}</span><br/>
-              ${layerLabel(activeLayer)}: <b style="color:${colorFn(code)}">${formatValue(data, activeLayer)}</b><br/>
-              기업: ${data.companyCount.toLocaleString()} &middot; 고용: ${data.employeeCount.toLocaleString()}
+              <span style="color:#94a3b8;font-size:11px;margin-left:4px">${data.province}</span><br/>
+              ${layerDef?.label ?? ""}: <b style="color:${colorFn(code)}">${formatted}</b><br/>
+              사업체: ${data.companyCount.toLocaleString()} · 인구: ${data.population?.toLocaleString() ?? "N/A"}
             </div>`
           )
           .addTo(map.current);
@@ -330,16 +286,135 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       if (code) onRegionSelect(code);
     };
 
+    const onDblClick = (e: maplibregl.MapLayerMouseEvent) => {
+      e.preventDefault();
+      const code = e.features?.[0]?.properties?.code;
+      if (code && geojsonRef.current) {
+        const feature = geojsonRef.current.features.find(
+          (f) => f.properties?.code === code
+        );
+        if (feature && map.current) {
+          const bounds = calcBounds([feature]);
+          map.current.fitBounds(bounds, { padding: 80, duration: 800, maxZoom: 12 });
+        }
+      }
+    };
+
     map.current.on("mousemove", "region-fills", onMouseMove);
     map.current.on("mouseleave", "region-fills", onMouseLeave);
     map.current.on("click", "region-fills", onClick);
+    map.current.on("dblclick", "region-fills", onDblClick);
 
     return () => {
       map.current?.off("mousemove", "region-fills", onMouseMove);
       map.current?.off("mouseleave", "region-fills", onMouseLeave);
       map.current?.off("click", "region-fills", onClick);
+      map.current?.off("dblclick", "region-fills", onDblClick);
     };
-  }, [mapReady, geojson, regions, activeLayer, regionLookup, buildColorMap, onRegionSelect, formatValue, layerLabel]);
+  }, [mapReady, geojson, regions, activeLayer, regionLookup, buildColorMap, onRegionSelect, calcBounds]);
+
+  // Subway overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+
+    if (!m.getSource("subway-lines")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/subway-lines.json`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (!m.getSource("subway-lines")) {
+            m.addSource("subway-lines", { type: "geojson", data });
+            m.addLayer({
+              id: "subway-lines-layer",
+              type: "line",
+              source: "subway-lines",
+              paint: {
+                "line-color": ["get", "color"],
+                "line-width": 3,
+                "line-opacity": 0.8,
+              },
+              layout: { visibility: showSubway ? "visible" : "none" },
+            });
+            m.addLayer({
+              id: "subway-labels",
+              type: "symbol",
+              source: "subway-lines",
+              layout: {
+                "symbol-placement": "line",
+                "text-field": ["get", "name"],
+                "text-size": 11,
+                "text-font": ["Open Sans Regular"],
+                visibility: showSubway ? "visible" : "none",
+              },
+              paint: {
+                "text-color": ["get", "color"],
+                "text-halo-color": "#ffffff",
+                "text-halo-width": 1.5,
+              },
+              minzoom: 9,
+            });
+          }
+        })
+        .catch(() => {});
+    } else {
+      const vis = showSubway ? "visible" : "none";
+      if (m.getLayer("subway-lines-layer")) m.setLayoutProperty("subway-lines-layer", "visibility", vis);
+      if (m.getLayer("subway-labels")) m.setLayoutProperty("subway-labels", "visibility", vis);
+    }
+  }, [mapReady, showSubway]);
+
+  // Roads overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+
+    if (!m.getSource("major-roads")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/major-roads.json`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (!m.getSource("major-roads")) {
+            m.addSource("major-roads", { type: "geojson", data });
+            m.addLayer({
+              id: "roads-layer",
+              type: "line",
+              source: "major-roads",
+              paint: {
+                "line-color": ["get", "color"],
+                "line-width": ["case", ["==", ["get", "number"], "100"], 3, 2],
+                "line-opacity": 0.7,
+                "line-dasharray": [2, 1],
+              },
+              layout: { visibility: showRoads ? "visible" : "none" },
+            });
+            m.addLayer({
+              id: "roads-labels",
+              type: "symbol",
+              source: "major-roads",
+              layout: {
+                "symbol-placement": "line",
+                "text-field": ["get", "name"],
+                "text-size": 10,
+                "text-font": ["Open Sans Regular"],
+                visibility: showRoads ? "visible" : "none",
+              },
+              paint: {
+                "text-color": "#1e40af",
+                "text-halo-color": "#ffffff",
+                "text-halo-width": 1.5,
+              },
+              minzoom: 8,
+            });
+          }
+        })
+        .catch(() => {});
+    } else {
+      const vis = showRoads ? "visible" : "none";
+      if (m.getLayer("roads-layer")) m.setLayoutProperty("roads-layer", "visibility", vis);
+      if (m.getLayer("roads-labels")) m.setLayoutProperty("roads-labels", "visibility", vis);
+    }
+  }, [mapReady, showRoads]);
 
   // Highlight selected
   useEffect(() => {

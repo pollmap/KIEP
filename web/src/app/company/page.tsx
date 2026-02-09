@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Navigation from "@/components/Layout/Navigation";
 import { getHealthColor } from "@/lib/constants";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -66,6 +65,15 @@ function generateCompanies(): MockCompany[] {
   });
 }
 
+const tooltipStyle = {
+  background: "#fff",
+  border: "1px solid #e2e8f0",
+  borderRadius: "8px",
+  fontSize: "12px",
+  color: "#334155",
+  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.07)",
+};
+
 export default function CompanyPage() {
   const [companies] = useState(generateCompanies);
   const [search, setSearch] = useState("");
@@ -80,142 +88,138 @@ export default function CompanyPage() {
   }, [companies, search]);
 
   return (
-    <div className="w-screen h-screen bg-[var(--background)] flex flex-col">
-      <Navigation />
-
-      <div className="flex-1 pt-14 flex overflow-hidden">
-        {/* Search Panel */}
-        <div className="w-[380px] border-r border-[var(--panel-border)] flex flex-col">
-          <div className="p-4 border-b border-[var(--panel-border)]">
-            <h1 className="text-lg font-bold mb-3">기업 검색</h1>
-            <input
-              type="text"
-              placeholder="기업명 또는 사업자번호 검색..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-2 bg-black/30 border border-[var(--panel-border)] rounded text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50"
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {filtered.map((c) => (
-              <button
-                key={c.bizNo}
-                onClick={() => setSelected(c)}
-                className={`w-full px-4 py-3 text-left border-b border-[var(--panel-border)]/50 transition-colors ${
-                  selected?.bizNo === c.bizNo ? "bg-blue-500/10" : "hover:bg-white/5"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{c.name}</span>
-                  {c.market && (
-                    <span className="text-[10px] text-gray-400 bg-white/5 px-1.5 py-0.5 rounded">{c.market}</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-500">
-                  <span>{c.industry}</span>
-                  <span className="text-gray-700">|</span>
-                  <span>{c.province}</span>
-                  <span className="text-gray-700">|</span>
-                  <span>{c.employees.toLocaleString()}명</span>
-                </div>
-              </button>
-            ))}
-          </div>
+    <div className="h-[calc(100vh-var(--nav-height))] flex overflow-hidden">
+      {/* Search Panel */}
+      <div className="w-[380px] border-r border-[var(--border)] flex flex-col bg-white">
+        <div className="p-4 border-b border-[var(--border)]">
+          <h1 className="text-lg font-bold text-[var(--text-primary)] mb-3">기업 검색</h1>
+          <input
+            type="text"
+            placeholder="기업명 또는 사업자번호 검색..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] outline-none focus:border-[var(--accent)]"
+          />
         </div>
-
-        {/* Detail */}
         <div className="flex-1 overflow-y-auto">
-          {selected ? (
-            <div className="p-6 max-w-4xl">
-              {/* Header */}
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold">{selected.name}</h2>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-400">
-                    <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[10px]">{selected.status}</span>
-                    <span>{selected.industry}</span>
-                    <span className="text-gray-600">|</span>
-                    <span>{selected.province}</span>
-                    {selected.stockCode && (
-                      <>
-                        <span className="text-gray-600">|</span>
-                        <span className="font-mono">{selected.market} {selected.stockCode}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] text-gray-500">사업자번호</div>
-                  <div className="font-mono text-sm">{selected.bizNo}</div>
-                </div>
-              </div>
-
-              {/* Key Metrics */}
-              <div className="grid grid-cols-4 gap-3 mb-6">
-                <MetricCard label="직원수" value={selected.employees.toLocaleString()} unit="명" />
-                <MetricCard label="건강도" value={selected.healthScore.toFixed(1)} unit="/100" color={getHealthColor(selected.healthScore)} />
-                {selected.financials && (
-                  <>
-                    <MetricCard label="매출(2024)" value={(selected.financials[1].revenue / 100).toFixed(0)} unit="억원" />
-                    <MetricCard
-                      label="영업이익(2024)"
-                      value={(selected.financials[1].profit / 100).toFixed(0)}
-                      unit="억원"
-                      color={selected.financials[1].profit >= 0 ? "#10b981" : "#ef4444"}
-                    />
-                  </>
+          {filtered.map((c) => (
+            <button
+              key={c.bizNo}
+              onClick={() => setSelected(c)}
+              className={`w-full px-4 py-3 text-left border-b border-[var(--border-light)] transition-colors ${
+                selected?.bizNo === c.bizNo ? "bg-[var(--accent-light)]" : "hover:bg-[var(--bg-secondary)]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-[var(--text-primary)]">{c.name}</span>
+                {c.market && (
+                  <span className="text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] px-1.5 py-0.5 rounded">{c.market}</span>
                 )}
               </div>
+              <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--text-tertiary)]">
+                <span>{c.industry}</span>
+                <span>|</span>
+                <span>{c.province}</span>
+                <span>|</span>
+                <span>{c.employees.toLocaleString()}명</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
 
-              {/* Employee History */}
-              <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg p-4 mb-6">
-                <h3 className="text-sm font-medium mb-3">고용 추이 (최근 12개월)</h3>
+      {/* Detail */}
+      <div className="flex-1 overflow-y-auto bg-[var(--bg-secondary)]">
+        {selected ? (
+          <div className="p-6 max-w-4xl">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--text-primary)]">{selected.name}</h2>
+                <div className="flex items-center gap-2 mt-1 text-sm text-[var(--text-secondary)]">
+                  <span className="px-1.5 py-0.5 bg-green-50 text-green-600 rounded text-[10px]">{selected.status}</span>
+                  <span>{selected.industry}</span>
+                  <span className="text-[var(--text-tertiary)]">|</span>
+                  <span>{selected.province}</span>
+                  {selected.stockCode && (
+                    <>
+                      <span className="text-[var(--text-tertiary)]">|</span>
+                      <span className="font-mono">{selected.market} {selected.stockCode}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-[var(--text-tertiary)]">사업자번호</div>
+                <div className="font-mono text-sm text-[var(--text-primary)]">{selected.bizNo}</div>
+              </div>
+            </div>
+
+            {/* Key Metrics */}
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              <MetricCard label="직원수" value={selected.employees.toLocaleString()} unit="명" />
+              <MetricCard label="건강도" value={selected.healthScore.toFixed(1)} unit="/100" color={getHealthColor(selected.healthScore)} />
+              {selected.financials && (
+                <>
+                  <MetricCard label="매출(2024)" value={(selected.financials[1].revenue / 100).toFixed(0)} unit="억원" />
+                  <MetricCard
+                    label="영업이익(2024)"
+                    value={(selected.financials[1].profit / 100).toFixed(0)}
+                    unit="억원"
+                    color={selected.financials[1].profit >= 0 ? "#16a34a" : "#dc2626"}
+                  />
+                </>
+              )}
+            </div>
+
+            {/* Employee History */}
+            <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm mb-6">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">고용 추이 (최근 12개월)</h3>
+              <div className="h-[200px]">
+                <ResponsiveContainer>
+                  <AreaChart data={selected.employeeHistory} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="month" tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                    <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Area type="monotone" dataKey="count" stroke="#2563eb" fill="#2563eb" fillOpacity={0.1} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Financials */}
+            {selected.financials && (
+              <div className="bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">재무 요약</h3>
                 <div className="h-[200px]">
                   <ResponsiveContainer>
-                    <AreaChart data={selected.employeeHistory} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                      <XAxis dataKey="month" tick={{ fill: "#666", fontSize: 10 }} />
-                      <YAxis tick={{ fill: "#666", fontSize: 10 }} />
-                      <Tooltip contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 6, fontSize: 12, color: "#eee" }} />
-                      <Area type="monotone" dataKey="count" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={2} />
-                    </AreaChart>
+                    <BarChart data={selected.financials} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="year" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                      <Tooltip contentStyle={tooltipStyle} />
+                      <Bar dataKey="revenue" name="매출" fill="#2563eb" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="profit" name="영업이익" radius={[3, 3, 0, 0]}>
+                        {selected.financials.map((f, i) => (
+                          <Cell key={i} fill={f.profit >= 0 ? "#16a34a" : "#dc2626"} />
+                        ))}
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
-
-              {/* Financials */}
-              {selected.financials && (
-                <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg p-4">
-                  <h3 className="text-sm font-medium mb-3">재무 요약</h3>
-                  <div className="h-[200px]">
-                    <ResponsiveContainer>
-                      <BarChart data={selected.financials} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                        <XAxis dataKey="year" tick={{ fill: "#999", fontSize: 11 }} />
-                        <YAxis tick={{ fill: "#666", fontSize: 10 }} />
-                        <Tooltip contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 6, fontSize: 12, color: "#eee" }} />
-                        <Bar dataKey="revenue" name="매출" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                        <Bar dataKey="profit" name="영업이익" radius={[3, 3, 0, 0]}>
-                          {selected.financials.map((f, i) => (
-                            <Cell key={i} fill={f.profit >= 0 ? "#10b981" : "#ef4444"} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-[var(--text-tertiary)]">
+            <div className="text-center">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-3 opacity-40"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <div className="text-sm">기업을 검색하고 선택하세요</div>
+              <div className="text-[10px] mt-1">NPS + NTS + FSC + PPS 통합 프로파일</div>
             </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-600">
-              <div className="text-center">
-                <div className="text-4xl mb-3">&target;</div>
-                <div className="text-sm">기업을 검색하고 선택하세요</div>
-                <div className="text-[10px] text-gray-700 mt-1">NPS + NTS + FSC + PPS 통합 프로파일</div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -223,11 +227,11 @@ export default function CompanyPage() {
 
 function MetricCard({ label, value, unit, color }: { label: string; value: string; unit: string; color?: string }) {
   return (
-    <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg p-3">
-      <div className="text-[10px] text-gray-500">{label}</div>
+    <div className="bg-white border border-[var(--border)] rounded-xl p-3 shadow-sm">
+      <div className="text-[10px] text-[var(--text-tertiary)]">{label}</div>
       <div className="flex items-baseline gap-1 mt-1">
-        <span className="text-xl font-bold" style={color ? { color } : undefined}>{value}</span>
-        <span className="text-[10px] text-gray-500">{unit}</span>
+        <span className="text-xl font-bold" style={{ color: color || "var(--text-primary)" }}>{value}</span>
+        <span className="text-[10px] text-[var(--text-tertiary)]">{unit}</span>
       </div>
     </div>
   );
