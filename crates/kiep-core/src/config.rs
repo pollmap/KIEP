@@ -27,9 +27,9 @@ impl Config {
             database_url,
             api_host: env::var("API_HOST").unwrap_or_else(|_| "0.0.0.0".into()),
             api_port: env::var("API_PORT")
-                .unwrap_or_else(|_| "8080".into())
+                .unwrap_or_else(|_| "3100".into())
                 .parse()
-                .unwrap_or(8080),
+                .unwrap_or(3100),
             nps_api_key: env::var("DATA_GO_KR_NPS_KEY").ok(),
             nts_api_key: env::var("DATA_GO_KR_NTS_KEY").ok(),
             fsc_api_key: env::var("DATA_GO_KR_FSC_KEY").ok(),

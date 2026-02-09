@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 use crate::AppState;
+use super::regions::AppError;
 
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
@@ -36,8 +37,8 @@ pub struct CompanySearchResult {
 async fn search_companies(
     State(state): State<Arc<AppState>>,
     Query(params): Query<SearchParams>,
-) -> Json<Vec<CompanySearchResult>> {
-    let limit = params.limit.unwrap_or(20).min(100);
+) -> Result<Json<Vec<CompanySearchResult>>, AppError> {
+    let limit = params.limit.unwrap_or(20).max(1).min(100);
     let pattern = format!("%{}%", params.q);
 
     let results = sqlx::query_as::<_, CompanySearchResult>(
@@ -54,10 +55,9 @@ async fn search_companies(
     .bind(&params.q)
     .bind(limit)
     .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
-    Json(results)
+    Ok(Json(results))
 }
 
 #[derive(Serialize, FromRow)]
@@ -105,7 +105,7 @@ pub struct CompanyFullProfile {
 async fn get_company(
     State(state): State<Arc<AppState>>,
     Path(biz_no): Path<String>,
-) -> Json<Option<CompanyFullProfile>> {
+) -> Result<Json<Option<CompanyFullProfile>>, AppError> {
     let company = sqlx::query_as::<_, CompanyDetail>(
         r#"
         SELECT biz_no, name, corp_no, ceo_name, biz_status, biz_type, biz_sector,
@@ -115,11 +115,10 @@ async fn get_company(
     )
     .bind(&biz_no)
     .fetch_optional(&state.pool)
-    .await
-    .unwrap_or(None);
+    .await?;
 
     let Some(company) = company else {
-        return Json(None);
+        return Ok(Json(None));
     };
 
     let employment = sqlx::query_as::<_, EmploymentEntry>(
@@ -133,8 +132,7 @@ async fn get_company(
     )
     .bind(&biz_no)
     .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
     let financials = sqlx::query_as::<_, FinancialEntry>(
         r#"
@@ -147,12 +145,11 @@ async fn get_company(
     )
     .bind(&biz_no)
     .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
-    Json(Some(CompanyFullProfile {
+    Ok(Json(Some(CompanyFullProfile {
         company,
         employment,
         financials,
-    }))
+    })))
 }

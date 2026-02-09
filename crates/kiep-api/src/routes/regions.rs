@@ -2,6 +2,8 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Path, Query, State},
+    http::StatusCode,
+    response::{IntoResponse, Response},
     routing::get,
     Json, Router,
 };
@@ -33,25 +35,23 @@ pub struct RegionListItem {
 async fn list_regions(
     State(state): State<Arc<AppState>>,
     Query(params): Query<ListParams>,
-) -> Json<Vec<RegionListItem>> {
+) -> Result<Json<Vec<RegionListItem>>, AppError> {
     let regions = if let Some(province) = params.province {
         sqlx::query_as::<_, RegionListItem>(
             "SELECT code, name, province FROM regions WHERE province = $1 ORDER BY name",
         )
         .bind(province)
         .fetch_all(&state.pool)
-        .await
-        .unwrap_or_default()
+        .await?
     } else {
         sqlx::query_as::<_, RegionListItem>(
             "SELECT code, name, province FROM regions ORDER BY province, name",
         )
         .fetch_all(&state.pool)
-        .await
-        .unwrap_or_default()
+        .await?
     };
 
-    Json(regions)
+    Ok(Json(regions))
 }
 
 #[derive(Serialize, FromRow)]
@@ -69,7 +69,7 @@ pub struct RegionDetail {
 async fn get_region(
     State(state): State<Arc<AppState>>,
     Path(code): Path<String>,
-) -> Json<Option<RegionDetail>> {
+) -> Result<Json<Option<RegionDetail>>, AppError> {
     let region = sqlx::query_as::<_, RegionDetail>(
         r#"
         SELECT
@@ -87,10 +87,9 @@ async fn get_region(
     )
     .bind(&code)
     .fetch_optional(&state.pool)
-    .await
-    .unwrap_or(None);
+    .await?;
 
-    Json(region)
+    Ok(Json(region))
 }
 
 #[derive(Serialize, FromRow)]
@@ -104,7 +103,7 @@ pub struct RegionHealthEntry {
 async fn get_region_health(
     State(state): State<Arc<AppState>>,
     Path(code): Path<String>,
-) -> Json<Vec<RegionHealthEntry>> {
+) -> Result<Json<Vec<RegionHealthEntry>>, AppError> {
     let entries = sqlx::query_as::<_, RegionHealthEntry>(
         r#"
         SELECT year_month, health_score, company_count, employee_count
@@ -116,10 +115,9 @@ async fn get_region_health(
     )
     .bind(&code)
     .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
-    Json(entries)
+    Ok(Json(entries))
 }
 
 #[derive(Deserialize)]
@@ -130,12 +128,12 @@ pub struct CompareParams {
 async fn compare_regions(
     State(state): State<Arc<AppState>>,
     Query(params): Query<CompareParams>,
-) -> Json<Vec<RegionDetail>> {
-    let codes: Vec<&str> = params.codes.split(',').map(|s| s.trim()).collect();
+) -> Result<Json<Vec<RegionDetail>>, AppError> {
+    let codes: Vec<&str> = params.codes.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
 
     let mut results = Vec::new();
-    for code in codes {
-        if let Ok(Some(region)) = sqlx::query_as::<_, RegionDetail>(
+    for code in codes.iter().take(10) {
+        if let Some(region) = sqlx::query_as::<_, RegionDetail>(
             r#"
             SELECT
                 r.code, r.name, r.province, r.center_lon, r.center_lat, r.area_km2,
@@ -152,11 +150,31 @@ async fn compare_regions(
         )
         .bind(code)
         .fetch_optional(&state.pool)
-        .await
+        .await?
         {
             results.push(region);
         }
     }
 
-    Json(results)
+    Ok(Json(results))
+}
+
+// Shared error type for API routes
+pub struct AppError(anyhow::Error);
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        tracing::error!("API error: {:?}", self.0);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({ "error": "Internal server error" })),
+        )
+            .into_response()
+    }
+}
+
+impl<E: Into<anyhow::Error>> From<E> for AppError {
+    fn from(err: E) -> Self {
+        Self(err.into())
+    }
 }

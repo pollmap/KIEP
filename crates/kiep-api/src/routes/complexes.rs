@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 use crate::AppState;
+use super::regions::AppError;
 
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
@@ -36,7 +37,7 @@ pub struct ComplexListItem {
 async fn list_complexes(
     State(state): State<Arc<AppState>>,
     Query(params): Query<ListParams>,
-) -> Json<Vec<ComplexListItem>> {
+) -> Result<Json<Vec<ComplexListItem>>, AppError> {
     let complexes = sqlx::query_as::<_, ComplexListItem>(
         r#"
         SELECT id, name, complex_type, province, tenant_count, operating_count, occupancy_rate
@@ -49,10 +50,9 @@ async fn list_complexes(
     .bind(&params.complex_type)
     .bind(&params.province)
     .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
-    Json(complexes)
+    Ok(Json(complexes))
 }
 
 #[derive(Serialize, FromRow)]
@@ -96,7 +96,7 @@ pub struct ComplexFullProfile {
 async fn get_complex(
     State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
-) -> Json<Option<ComplexFullProfile>> {
+) -> Result<Json<Option<ComplexFullProfile>>, AppError> {
     let complex = sqlx::query_as::<_, ComplexDetail>(
         r#"
         SELECT id, name, complex_type, province, sigungu,
@@ -106,11 +106,10 @@ async fn get_complex(
     )
     .bind(&id)
     .fetch_optional(&state.pool)
-    .await
-    .unwrap_or(None);
+    .await?;
 
     let Some(complex) = complex else {
-        return Json(None);
+        return Ok(Json(None));
     };
 
     let series = sqlx::query_as::<_, ComplexSeriesEntry>(
@@ -124,16 +123,20 @@ async fn get_complex(
     )
     .bind(&id)
     .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
+    // Use LEFT JOIN with LATERAL to avoid N+1 subquery
     let top_companies = sqlx::query_as::<_, ComplexCompanyItem>(
         r#"
-        SELECT c.biz_no, c.name, c.stock_code,
-               (SELECT es.employee_count FROM employment_series es
-                WHERE es.biz_no = c.biz_no
-                ORDER BY es.year_month DESC LIMIT 1) as employee_count
+        SELECT c.biz_no, c.name, c.stock_code, latest_emp.employee_count
         FROM companies c
+        LEFT JOIN LATERAL (
+            SELECT es.employee_count
+            FROM employment_series es
+            WHERE es.biz_no = c.biz_no
+            ORDER BY es.year_month DESC
+            LIMIT 1
+        ) latest_emp ON true
         WHERE c.complex_id = $1
         ORDER BY c.stock_code IS NOT NULL DESC, c.name
         LIMIT 20
@@ -141,12 +144,11 @@ async fn get_complex(
     )
     .bind(&id)
     .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
-    Json(Some(ComplexFullProfile {
+    Ok(Json(Some(ComplexFullProfile {
         complex,
         series,
         top_companies,
-    }))
+    })))
 }

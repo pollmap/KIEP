@@ -31,7 +31,8 @@ export default function ComparePage() {
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data/sample-regions.json`)
       .then((r) => r.json())
-      .then(setRegions);
+      .then(setRegions)
+      .catch((err) => console.error("Failed to load regions:", err));
   }, []);
 
   const selectedRegions = useMemo(
@@ -222,7 +223,7 @@ export default function ComparePage() {
             </div>
           ) : (
             <div className="text-center py-20 text-gray-600">
-              <div className="text-5xl mb-4">V</div>
+              <div className="text-5xl mb-4">&harr;</div>
               <div className="text-sm">2개 이상의 지역을 선택하면 비교 분석이 시작됩니다</div>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {["11010", "41110", "48120", "43110"].map((code) => {

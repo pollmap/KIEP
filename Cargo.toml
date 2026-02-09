@@ -38,9 +38,6 @@ axum = { version = "0.8", features = ["macros"] }
 tower = { version = "0.5", features = ["full"] }
 tower-http = { version = "0.6", features = ["cors", "trace", "compression-gzip"] }
 
-# Data processing
-polars = { version = "0.46", features = ["json", "csv"] }
-
 # Date/time
 chrono = { version = "0.4", features = ["serde"] }
 
