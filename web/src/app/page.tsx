@@ -152,10 +152,10 @@ export default function MapPage() {
           </div>
         </div>
 
-        {/* Bottom controls */}
-        <div className="absolute bottom-3 md:bottom-3 left-3 right-3 z-10 flex flex-col gap-2 mb-[env(safe-area-inset-bottom)] md:mb-0" style={{ bottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
-          {historicalData && <TimelineControls startYear={historicalData.startYear} endYear={historicalData.endYear} currentYear={currentYear} onYearChange={setCurrentYear} onReset={handleReset} />}
+        {/* Bottom-left: Legend + Timeline stacked */}
+        <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2 max-w-[420px]" style={{ bottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
           <div className="hidden md:block w-fit"><Legend activeLayer={activeLayer} /></div>
+          {historicalData && <TimelineControls startYear={historicalData.startYear} endYear={historicalData.endYear} currentYear={currentYear} onYearChange={setCurrentYear} onReset={handleReset} />}
         </div>
       </div>
 

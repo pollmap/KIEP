@@ -190,6 +190,16 @@ export function getRegionValue(region: RegionData, layerKey: DataLayerKey): numb
   return (region as unknown as Record<string, number>)[layerKey] ?? 0;
 }
 
+// Robust percentile: counts how many values are <= the given value
+function percentileRank(value: number, sorted: number[]): number {
+  let count = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i] <= value) count++;
+    else break;
+  }
+  return count / Math.max(sorted.length, 1);
+}
+
 export function getLayerColor(layerKey: DataLayerKey, value: number, allValues: number[]): string {
   const def = getLayerDef(layerKey);
   if (!def) return "#6b7280";
@@ -197,7 +207,6 @@ export function getLayerColor(layerKey: DataLayerKey, value: number, allValues: 
   if (layerKey === "healthScore") return getHealthColor(value);
 
   if (def.colorScheme === "diverging") {
-    // Band-based for diverging
     if (layerKey === "growthRate" || layerKey === "populationGrowth" || layerKey === "priceChangeRate") {
       if (value >= 5) return def.palette[4];
       if (value >= 2) return def.palette[3];
@@ -206,13 +215,11 @@ export function getLayerColor(layerKey: DataLayerKey, value: number, allValues: 
       return def.palette[0];
     }
     if (layerKey === "agingRate" || layerKey === "storeCloseRate" || layerKey === "unemploymentRate") {
-      // Higher is worse
       const sorted = [...allValues].sort((a, b) => a - b);
-      const rank = sorted.indexOf(value) / Math.max(sorted.length - 1, 1);
-      const idx = Math.min(4, Math.floor(rank * 5));
+      const rank = percentileRank(value, sorted);
+      const idx = Math.min(4, Math.max(0, Math.floor(rank * 4.999)));
       return def.palette[idx];
     }
-    // Default diverging
     if (value >= 5) return def.palette[4];
     if (value >= 2) return def.palette[3];
     if (value >= 0) return def.palette[2];
@@ -222,11 +229,11 @@ export function getLayerColor(layerKey: DataLayerKey, value: number, allValues: 
 
   // Quantile-based
   const sorted = [...allValues].sort((a, b) => a - b);
-  const rank = sorted.indexOf(value) / Math.max(sorted.length - 1, 1);
-  if (rank >= 0.8) return def.palette[4];
-  if (rank >= 0.6) return def.palette[3];
-  if (rank >= 0.4) return def.palette[2];
-  if (rank >= 0.2) return def.palette[1];
+  const rank = percentileRank(value, sorted);
+  if (rank > 0.8) return def.palette[4];
+  if (rank > 0.6) return def.palette[3];
+  if (rank > 0.4) return def.palette[2];
+  if (rank > 0.2) return def.palette[1];
   return def.palette[0];
 }
 
