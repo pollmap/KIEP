@@ -25,6 +25,7 @@ interface KoreaMapProps {
   showRailway?: boolean;
   showAirports?: boolean;
   showPorts?: boolean;
+  showComplexes?: boolean;
 }
 
 export interface KoreaMapHandle {
@@ -34,7 +35,7 @@ export interface KoreaMapHandle {
 }
 
 const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
-  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, showSubway = false, showRoads = false, showRailway = false, showAirports = false, showPorts = false },
+  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, showSubway = false, showRoads = false, showRailway = false, showAirports = false, showPorts = false, showComplexes = false },
   ref
 ) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -490,6 +491,36 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       if (m.getLayer("ports-labels")) m.setLayoutProperty("ports-labels", "visibility", vis);
     }
   }, [mapReady, showPorts]);
+
+  // Industrial complexes overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+    if (!m.getSource("complexes")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/industrial-complexes.json`).then((r) => r.json()).then((data) => {
+        if (!m.getSource("complexes")) {
+          m.addSource("complexes", { type: "geojson", data });
+          m.addLayer({ id: "complexes-circle", type: "circle", source: "complexes",
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 2, 10, 5, 14, 8],
+              "circle-color": ["match", ["get", "type"], "국가", "#2563eb", "일반", "#16a34a", "도시첨단", "#7c3aed", "농공", "#d97706", "#6b7280"],
+              "circle-opacity": 0.75,
+              "circle-stroke-width": 1,
+              "circle-stroke-color": "#ffffff",
+            },
+            layout: { visibility: showComplexes ? "visible" : "none" } });
+          m.addLayer({ id: "complexes-labels", type: "symbol", source: "complexes",
+            layout: { "text-field": ["get", "name"], "text-size": 10, "text-font": ["Open Sans Regular"], "text-offset": [0, 1.2], "text-anchor": "top", "text-optional": true, visibility: showComplexes ? "visible" : "none" },
+            paint: { "text-color": "#475569", "text-halo-color": "#ffffff", "text-halo-width": 1.5 }, minzoom: 10 });
+        }
+      }).catch(() => {});
+    } else {
+      const vis = showComplexes ? "visible" : "none";
+      if (m.getLayer("complexes-circle")) m.setLayoutProperty("complexes-circle", "visibility", vis);
+      if (m.getLayer("complexes-labels")) m.setLayoutProperty("complexes-labels", "visibility", vis);
+    }
+  }, [mapReady, showComplexes]);
 
   // Highlight selected
   useEffect(() => {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { Suspense, useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { RegionData, HistoricalData } from "@/lib/types";
 import { DataLayerKey, PROVINCE_SHORT } from "@/lib/constants";
@@ -41,7 +42,15 @@ const HISTORICAL_KEYS = [
   "culturalFacilities", "touristVisitors", "accommodations",
 ] as const;
 
-export default function MapPage() {
+export default function MapPageWrapper() {
+  return (
+    <Suspense fallback={<div className="w-screen h-[calc(100vh-var(--nav-height))] flex items-center justify-center"><div className="text-[var(--text-tertiary)] text-sm">로딩 중...</div></div>}>
+      <MapPage />
+    </Suspense>
+  );
+}
+
+function MapPage() {
   const [baseRegions, setBaseRegions] = useState<RegionData[]>([]);
   const [geojson, setGeojson] = useState<GeoJSON.FeatureCollection | null>(null);
   const [historicalData, setHistoricalData] = useState<HistoricalData | null>(null);
@@ -59,7 +68,9 @@ export default function MapPage() {
   const [showRailway, setShowRailway] = useState(false);
   const [showAirports, setShowAirports] = useState(false);
   const [showPorts, setShowPorts] = useState(false);
+  const [showComplexes, setShowComplexes] = useState(false);
   const mapRef = useRef<KoreaMapHandle>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -80,6 +91,18 @@ export default function MapPage() {
       })
       .catch((err) => { console.error("Failed to load data:", err); setLoading(false); });
   }, []);
+
+  // Handle ?region= query parameter from cross-page navigation
+  useEffect(() => {
+    const regionCode = searchParams.get("region");
+    const layerParam = searchParams.get("layer") as DataLayerKey | null;
+    if (regionCode && baseRegions.length > 0) {
+      setSelectedCode(regionCode);
+      setMobileDetail(true);
+      setTimeout(() => mapRef.current?.flyToRegion(regionCode), 300);
+    }
+    if (layerParam) setActiveLayer(layerParam);
+  }, [searchParams, baseRegions]);
 
   const regions = useMemo(() => {
     if (currentYear === END_YEAR || !historicalData) return baseRegions;
@@ -180,7 +203,7 @@ export default function MapPage() {
 
       {/* Map */}
       <div className="flex-1 relative">
-        <KoreaMap ref={mapRef} regions={displayedRegions} geojson={geojson} selectedRegion={selectedCode} onRegionSelect={handleRegionSelect} activeLayer={activeLayer} showSubway={showSubway} showRoads={showRoads} showRailway={showRailway} showAirports={showAirports} showPorts={showPorts} />
+        <KoreaMap ref={mapRef} regions={displayedRegions} geojson={geojson} selectedRegion={selectedCode} onRegionSelect={handleRegionSelect} activeLayer={activeLayer} showSubway={showSubway} showRoads={showRoads} showRailway={showRailway} showAirports={showAirports} showPorts={showPorts} showComplexes={showComplexes} />
 
         {/* Top controls */}
         <div className="absolute top-3 left-3 right-3 z-10 pointer-events-none">
@@ -197,6 +220,7 @@ export default function MapPage() {
             { key: "railway", label: "철도/KTX", active: showRailway, toggle: () => setShowRailway(!showRailway), color: "#dc2626", icon: "M4 15h16M6 19h12M8 11V7c0-2.2 1.8-4 4-4s4 1.8 4 4v4" },
             { key: "airports", label: "공항", active: showAirports, toggle: () => setShowAirports(!showAirports), color: "#7c3aed", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
             { key: "ports", label: "항만", active: showPorts, toggle: () => setShowPorts(!showPorts), color: "#0284c7", icon: "M3 17h18M5 12l7-7 7 7M5 17v-5h14v5" },
+            { key: "complexes", label: "산업단지", active: showComplexes, toggle: () => setShowComplexes(!showComplexes), color: "#059669", icon: "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" },
           ].map((item) => (
             <button key={item.key} onClick={item.toggle}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium shadow-sm transition-all ${item.active ? "text-white" : "bg-white/90 text-[var(--text-secondary)] border border-[var(--border)] hover:bg-white"}`}
