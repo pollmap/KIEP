@@ -7,8 +7,11 @@ import { RegionData } from "@/lib/types";
 import {
   KOREA_CENTER,
   getLayerColor,
+  getRegionValue,
+  formatLayerValue,
+  getLayerDef,
   BASEMAP_TILES,
-  MapLayerType,
+  DataLayerKey,
 } from "@/lib/constants";
 
 interface KoreaMapProps {
@@ -16,7 +19,7 @@ interface KoreaMapProps {
   geojson: GeoJSON.FeatureCollection | null;
   selectedRegion: string | null;
   onRegionSelect: (code: string | null) => void;
-  activeLayer: MapLayerType;
+  activeLayer: DataLayerKey;
 }
 
 export interface KoreaMapHandle {
@@ -45,7 +48,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
     return m;
   }, [regions]);
 
-  // Calculate bounds for a set of features
   const calcBounds = useCallback((features: GeoJSON.Feature[]) => {
     const bounds = new maplibregl.LngLatBounds();
     const addCoords = (coords: unknown) => {
@@ -70,12 +72,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       );
       if (!feature) return;
       const bounds = calcBounds([feature]);
-      const center = bounds.getCenter();
-      map.current.flyTo({
-        center: [center.lng, center.lat],
-        zoom: Math.max(map.current.getZoom(), 9),
-        duration: 800,
-      });
+      map.current.fitBounds(bounds, { padding: 80, duration: 800, maxZoom: 11 });
     },
     flyToProvince: (prefix: string) => {
       if (!map.current || !geojsonRef.current) return;
@@ -128,6 +125,12 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       maxZoom: 14,
     });
 
+    // Explicitly enable zoom interactions
+    map.current.scrollZoom.enable();
+    map.current.doubleClickZoom.enable();
+    map.current.touchZoomRotate.enable();
+    map.current.dragPan.enable();
+
     map.current.addControl(new maplibregl.NavigationControl(), "bottom-right");
 
     popup.current = new maplibregl.Popup({
@@ -146,52 +149,17 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
 
   // Build color map for features
   const buildColorMap = useCallback(
-    (lookup: Map<string, RegionData>, layer: MapLayerType) => {
-      const allValues = regions.map((r) => {
-        switch (layer) {
-          case "healthScore": return r.healthScore;
-          case "companyCount": return r.companyCount;
-          case "employeeCount": return r.employeeCount;
-          case "growthRate": return r.growthRate;
-        }
-      });
+    (lookup: Map<string, RegionData>, layer: DataLayerKey) => {
+      const allValues = regions.map((r) => getRegionValue(r, layer));
 
       return (code: string): string => {
         const data = lookup.get(code);
         if (!data) return "#6b7280";
-        const value =
-          layer === "healthScore" ? data.healthScore :
-          layer === "companyCount" ? data.companyCount :
-          layer === "employeeCount" ? data.employeeCount :
-          data.growthRate;
+        const value = getRegionValue(data, layer);
         return getLayerColor(layer, value, allValues);
       };
     },
     [regions]
-  );
-
-  const formatValue = useCallback(
-    (data: RegionData, layer: MapLayerType): string => {
-      switch (layer) {
-        case "healthScore": return data.healthScore.toFixed(1);
-        case "companyCount": return data.companyCount.toLocaleString() + "개";
-        case "employeeCount": return data.employeeCount.toLocaleString() + "명";
-        case "growthRate": return (data.growthRate >= 0 ? "+" : "") + data.growthRate.toFixed(1) + "%";
-      }
-    },
-    []
-  );
-
-  const layerLabel = useCallback(
-    (layer: MapLayerType): string => {
-      switch (layer) {
-        case "healthScore": return "건강도";
-        case "companyCount": return "기업 수";
-        case "employeeCount": return "고용 인원";
-        case "growthRate": return "성장률";
-      }
-    },
-    []
   );
 
   // Add/update GeoJSON layer
@@ -200,6 +168,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
 
     const lookup = regionLookup();
     const colorFn = buildColorMap(lookup, activeLayer);
+    const layerDef = getLayerDef(activeLayer);
 
     const enriched: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
@@ -210,10 +179,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
           ...f,
           properties: {
             ...f.properties,
-            healthScore: data?.healthScore ?? 50,
-            companyCount: data?.companyCount ?? 0,
-            employeeCount: data?.employeeCount ?? 0,
-            growthRate: data?.growthRate ?? 0,
             province: data?.province ?? "",
             fillColor: colorFn(code || ""),
           },
@@ -290,14 +255,16 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       }
 
       if (popup.current && data) {
+        const value = getRegionValue(data, activeLayer);
+        const formatted = formatLayerValue(value, activeLayer);
         popup.current
           .setLngLat(e.lngLat)
           .setHTML(
             `<div style="font-size:13px;line-height:1.6">
               <strong>${data.name}</strong>
               <span style="color:#999;font-size:11px;margin-left:4px">${data.province}</span><br/>
-              ${layerLabel(activeLayer)}: <b style="color:${colorFn(code)}">${formatValue(data, activeLayer)}</b><br/>
-              기업: ${data.companyCount.toLocaleString()} &middot; 고용: ${data.employeeCount.toLocaleString()}
+              ${layerDef?.label ?? ""}: <b style="color:${colorFn(code)}">${formatted}</b><br/>
+              기업: ${data.companyCount.toLocaleString()} &middot; 인구: ${data.population?.toLocaleString() ?? "N/A"}
             </div>`
           )
           .addTo(map.current);
@@ -319,16 +286,33 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       if (code) onRegionSelect(code);
     };
 
+    // Double-click to zoom into region
+    const onDblClick = (e: maplibregl.MapLayerMouseEvent) => {
+      e.preventDefault();
+      const code = e.features?.[0]?.properties?.code;
+      if (code && geojsonRef.current) {
+        const feature = geojsonRef.current.features.find(
+          (f) => f.properties?.code === code
+        );
+        if (feature && map.current) {
+          const bounds = calcBounds([feature]);
+          map.current.fitBounds(bounds, { padding: 80, duration: 800, maxZoom: 12 });
+        }
+      }
+    };
+
     map.current.on("mousemove", "region-fills", onMouseMove);
     map.current.on("mouseleave", "region-fills", onMouseLeave);
     map.current.on("click", "region-fills", onClick);
+    map.current.on("dblclick", "region-fills", onDblClick);
 
     return () => {
       map.current?.off("mousemove", "region-fills", onMouseMove);
       map.current?.off("mouseleave", "region-fills", onMouseLeave);
       map.current?.off("click", "region-fills", onClick);
+      map.current?.off("dblclick", "region-fills", onDblClick);
     };
-  }, [mapReady, geojson, regions, activeLayer, regionLookup, buildColorMap, onRegionSelect, formatValue, layerLabel]);
+  }, [mapReady, geojson, regions, activeLayer, regionLookup, buildColorMap, onRegionSelect, calcBounds]);
 
   // Highlight selected
   useEffect(() => {

@@ -2,19 +2,20 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import { RegionData } from "@/lib/types";
-import { getHealthColor, PROVINCES, PROVINCE_SHORT, MapLayerType } from "@/lib/constants";
+import { getHealthColor, PROVINCES, PROVINCE_SHORT, DataLayerKey, getRegionValue, formatLayerValue, getLayerDef, getLayerColor } from "@/lib/constants";
 
 interface RegionRankingProps {
   regions: RegionData[];
   selectedCode: string | null;
   onSelect: (code: string) => void;
-  activeLayer: MapLayerType;
+  activeLayer: DataLayerKey;
   provinceFilter: string | null;
   onProvinceFilter: (province: string | null) => void;
   onExportCSV: () => void;
+  currentYear: number;
 }
 
-type SortKey = "healthScore" | "companyCount" | "employeeCount" | "growthRate" | "name";
+type SortKey = DataLayerKey | "name";
 
 export default function RegionRanking({
   regions,
@@ -24,12 +25,15 @@ export default function RegionRanking({
   provinceFilter,
   onProvinceFilter,
   onExportCSV,
+  currentYear,
 }: RegionRankingProps) {
   const [sortKey, setSortKey] = useState<SortKey>("healthScore");
   const [sortAsc, setSortAsc] = useState(false);
   const [search, setSearch] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLButtonElement>(null);
+
+  const layerDef = getLayerDef(activeLayer);
 
   const filtered = useMemo(() => {
     let list = [...regions];
@@ -50,13 +54,19 @@ export default function RegionRanking({
       if (sortKey === "name") {
         cmp = a.name.localeCompare(b.name, "ko");
       } else {
-        cmp = a[sortKey] - b[sortKey];
+        cmp = getRegionValue(a, sortKey) - getRegionValue(b, sortKey);
       }
       return sortAsc ? cmp : -cmp;
     });
 
     return list;
   }, [regions, provinceFilter, search, sortKey, sortAsc]);
+
+  // All values for color computation
+  const allLayerValues = useMemo(
+    () => regions.map((r) => getRegionValue(r, activeLayer)),
+    [regions, activeLayer]
+  );
 
   useEffect(() => {
     if (selectedCode && selectedItemRef.current) {
@@ -91,13 +101,20 @@ export default function RegionRanking({
           <div className="text-[10px] text-gray-600 leading-tight">
             Korea Industrial<br />Ecosystem Platform
           </div>
-          <button
-            onClick={onExportCSV}
-            className="ml-auto px-2 py-1 rounded text-[10px] font-medium text-gray-500 hover:text-blue-400 border border-[var(--panel-border)] hover:border-blue-500/30 transition-colors"
-            title="CSV 다운로드"
-          >
-            CSV
-          </button>
+          <div className="ml-auto flex items-center gap-1.5">
+            {currentYear !== 2025 && (
+              <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded font-medium tabular-nums">
+                {currentYear}
+              </span>
+            )}
+            <button
+              onClick={onExportCSV}
+              className="px-2 py-1 rounded text-[10px] font-medium text-gray-500 hover:text-blue-400 border border-[var(--panel-border)] hover:border-blue-500/30 transition-colors"
+              title="CSV 다운로드"
+            >
+              CSV
+            </button>
+          </div>
         </div>
         <input
           type="text"
@@ -144,8 +161,8 @@ export default function RegionRanking({
         <button onClick={() => handleSort("healthScore")} className="w-14 text-right hover:text-gray-400">
           건강도 {sortKey === "healthScore" && (sortAsc ? "↑" : "↓")}
         </button>
-        <button onClick={() => handleSort("companyCount")} className="w-16 text-right hover:text-gray-400">
-          기업 {sortKey === "companyCount" && (sortAsc ? "↑" : "↓")}
+        <button onClick={() => handleSort(activeLayer)} className="w-20 text-right hover:text-gray-400">
+          {layerDef?.label ?? "값"} {sortKey === activeLayer && (sortAsc ? "↑" : "↓")}
         </button>
         <button onClick={() => handleSort("growthRate")} className="w-14 text-right hover:text-gray-400">
           성장 {sortKey === "growthRate" && (sortAsc ? "↑" : "↓")}
@@ -156,6 +173,8 @@ export default function RegionRanking({
       <div ref={listRef} className="flex-1 overflow-y-auto">
         {filtered.map((r, i) => {
           const isSelected = r.code === selectedCode;
+          const layerVal = getRegionValue(r, activeLayer);
+          const layerColor = getLayerColor(activeLayer, layerVal, allLayerValues);
           return (
             <button
               key={r.code}
@@ -179,8 +198,10 @@ export default function RegionRanking({
                   {r.healthScore.toFixed(1)}
                 </span>
               </div>
-              <div className="w-16 text-right text-[11px] text-gray-400">
-                {r.companyCount.toLocaleString()}
+              <div className="w-20 text-right">
+                <span className="text-[11px] font-medium" style={{ color: layerColor }}>
+                  {formatLayerValue(layerVal, activeLayer)}
+                </span>
               </div>
               <div className="w-14 text-right">
                 <span

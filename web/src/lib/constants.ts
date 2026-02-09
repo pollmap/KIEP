@@ -1,4 +1,4 @@
-import { HealthScoreBand, MapViewState } from "./types";
+import { HealthScoreBand, MapViewState, RegionData } from "./types";
 
 export const KOREA_CENTER: MapViewState = {
   longitude: 127.7,
@@ -70,99 +70,211 @@ export const PROVINCES: Record<string, string> = {
 };
 
 export const PROVINCE_SHORT: Record<string, string> = {
-  "11": "서울",
-  "21": "부산",
-  "22": "대구",
-  "23": "인천",
-  "24": "광주",
-  "25": "대전",
-  "26": "울산",
-  "29": "세종",
-  "31": "경기",
-  "32": "강원",
-  "33": "충북",
-  "34": "충남",
-  "35": "전북",
-  "36": "전남",
-  "37": "경북",
-  "38": "경남",
+  "11": "서울", "21": "부산", "22": "대구", "23": "인천",
+  "24": "광주", "25": "대전", "26": "울산", "29": "세종",
+  "31": "경기", "32": "강원", "33": "충북", "34": "충남",
+  "35": "전북", "36": "전남", "37": "경북", "38": "경남",
   "39": "제주",
 };
 
-export type MapLayerType = "healthScore" | "companyCount" | "employeeCount" | "growthRate";
+// ── Data Categories & Layers ──────────────────────────
 
-export const MAP_LAYERS: { key: MapLayerType; label: string }[] = [
-  { key: "healthScore", label: "건강도" },
-  { key: "companyCount", label: "기업 수" },
-  { key: "employeeCount", label: "고용 인원" },
-  { key: "growthRate", label: "성장률" },
+export type DataCategory = "industry" | "population" | "realEstate" | "employment" | "education" | "commercial" | "transport";
+
+export type DataLayerKey =
+  | "healthScore" | "companyCount" | "employeeCount" | "growthRate"
+  | "population" | "populationGrowth" | "agingRate" | "youthRatio"
+  | "avgLandPrice" | "priceChangeRate"
+  | "employmentRate" | "unemploymentRate"
+  | "schoolCount" | "studentCount"
+  | "storeCount" | "storeOpenRate" | "storeCloseRate"
+  | "transitScore";
+
+export interface CategoryDef {
+  key: DataCategory;
+  label: string;
+  icon: string;
+  layers: LayerDef[];
+}
+
+export interface LayerDef {
+  key: DataLayerKey;
+  label: string;
+  unit: string;
+  format: "number" | "decimal" | "percent" | "signedPercent" | "price";
+  colorScheme: "health" | "quantile" | "diverging";
+  palette: string[]; // 5 colors from low to high
+}
+
+export const DATA_CATEGORIES: CategoryDef[] = [
+  {
+    key: "industry", label: "산업", icon: "🏭",
+    layers: [
+      { key: "healthScore", label: "건강도", unit: "점", format: "decimal", colorScheme: "health", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "companyCount", label: "기업 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#ddd6fe","#c4b5fd","#a78bfa","#8b5cf6","#7c3aed"] },
+      { key: "employeeCount", label: "고용 인원", unit: "명", format: "number", colorScheme: "quantile", palette: ["#ccfbf1","#99f6e4","#5eead4","#14b8a6","#0d9488"] },
+      { key: "growthRate", label: "성장률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+    ],
+  },
+  {
+    key: "population", label: "인구", icon: "👥",
+    layers: [
+      { key: "population", label: "총인구", unit: "명", format: "number", colorScheme: "quantile", palette: ["#fce4ec","#f48fb1","#ec407a","#c2185b","#880e4f"] },
+      { key: "populationGrowth", label: "인구증감률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "agingRate", label: "고령화율", unit: "%", format: "decimal", colorScheme: "diverging", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "youthRatio", label: "청년비율", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+    ],
+  },
+  {
+    key: "realEstate", label: "부동산", icon: "🏠",
+    layers: [
+      { key: "avgLandPrice", label: "평균지가", unit: "만원/㎡", format: "price", colorScheme: "quantile", palette: ["#fef9c3","#fde047","#facc15","#ca8a04","#854d0e"] },
+      { key: "priceChangeRate", label: "지가변동률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+    ],
+  },
+  {
+    key: "employment", label: "고용", icon: "💼",
+    layers: [
+      { key: "employmentRate", label: "고용률", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#dcfce7","#86efac","#4ade80","#16a34a","#166534"] },
+      { key: "unemploymentRate", label: "실업률", unit: "%", format: "decimal", colorScheme: "diverging", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+    ],
+  },
+  {
+    key: "education", label: "교육", icon: "🎓",
+    layers: [
+      { key: "schoolCount", label: "학교 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#e0e7ff","#a5b4fc","#818cf8","#6366f1","#4338ca"] },
+      { key: "studentCount", label: "학생 수", unit: "명", format: "number", colorScheme: "quantile", palette: ["#ede9fe","#c4b5fd","#a78bfa","#7c3aed","#5b21b6"] },
+    ],
+  },
+  {
+    key: "commercial", label: "상권", icon: "🏪",
+    layers: [
+      { key: "storeCount", label: "상가 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#fce7f3","#f9a8d4","#f472b6","#db2777","#9d174d"] },
+      { key: "storeOpenRate", label: "개업률", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#dcfce7","#86efac","#4ade80","#16a34a","#166534"] },
+      { key: "storeCloseRate", label: "폐업률", unit: "%", format: "decimal", colorScheme: "diverging", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+    ],
+  },
+  {
+    key: "transport", label: "교통", icon: "🚇",
+    layers: [
+      { key: "transitScore", label: "교통접근성", unit: "점", format: "decimal", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+    ],
+  },
 ];
+
+// Quick lookup helpers
+export function getCategoryForLayer(layerKey: DataLayerKey): CategoryDef | undefined {
+  return DATA_CATEGORIES.find((c) => c.layers.some((l) => l.key === layerKey));
+}
+
+export function getLayerDef(layerKey: DataLayerKey): LayerDef | undefined {
+  for (const cat of DATA_CATEGORIES) {
+    const found = cat.layers.find((l) => l.key === layerKey);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+// Backward compat
+export type MapLayerType = DataLayerKey;
+export const MAP_LAYERS = DATA_CATEGORIES[0].layers.map((l) => ({ key: l.key, label: l.label }));
 
 export const BASEMAP_TILES = {
   url: "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
   attribution: "&copy; OpenStreetMap &copy; CARTO",
 };
 
-// Layer-specific color bands for legend and coloring
-export const LAYER_COLOR_BANDS: Record<MapLayerType, { label: string; color: string; min?: number; max?: number }[]> = {
-  healthScore: [
-    { label: "활발 (90+)", color: "#10b981", min: 90, max: 100 },
-    { label: "양호 (70-89)", color: "#34d399", min: 70, max: 89 },
-    { label: "보통 (50-69)", color: "#fbbf24", min: 50, max: 69 },
-    { label: "주의 (30-49)", color: "#f97316", min: 30, max: 49 },
-    { label: "위험 (<30)", color: "#ef4444", min: 0, max: 29 },
-  ],
-  companyCount: [
-    { label: "매우 많음 (상위 20%)", color: "#7c3aed" },
-    { label: "많음", color: "#8b5cf6" },
-    { label: "보통", color: "#a78bfa" },
-    { label: "적음", color: "#c4b5fd" },
-    { label: "매우 적음 (하위 20%)", color: "#ddd6fe" },
-  ],
-  employeeCount: [
-    { label: "매우 많음 (상위 20%)", color: "#0d9488" },
-    { label: "많음", color: "#14b8a6" },
-    { label: "보통", color: "#5eead4" },
-    { label: "적음", color: "#99f6e4" },
-    { label: "매우 적음 (하위 20%)", color: "#ccfbf1" },
-  ],
-  growthRate: [
-    { label: "고성장 (5%+)", color: "#10b981" },
-    { label: "성장 (2-5%)", color: "#34d399" },
-    { label: "정체 (0-2%)", color: "#fbbf24" },
-    { label: "감소 (0~-2%)", color: "#f97316" },
-    { label: "급감소 (-2% 이하)", color: "#ef4444" },
-  ],
-};
+// ── Color utilities ──────────────────────────
 
-export function getLayerColor(layerType: MapLayerType, value: number, allValues: number[]): string {
-  if (layerType === "healthScore") {
-    return getHealthColor(value);
+export function getRegionValue(region: RegionData, layerKey: DataLayerKey): number {
+  return (region as unknown as Record<string, number>)[layerKey] ?? 0;
+}
+
+export function getLayerColor(layerKey: DataLayerKey, value: number, allValues: number[]): string {
+  const def = getLayerDef(layerKey);
+  if (!def) return "#6b7280";
+
+  if (layerKey === "healthScore") return getHealthColor(value);
+
+  if (def.colorScheme === "diverging") {
+    // Band-based for diverging
+    if (layerKey === "growthRate" || layerKey === "populationGrowth" || layerKey === "priceChangeRate") {
+      if (value >= 5) return def.palette[4];
+      if (value >= 2) return def.palette[3];
+      if (value >= 0) return def.palette[2];
+      if (value >= -2) return def.palette[1];
+      return def.palette[0];
+    }
+    if (layerKey === "agingRate" || layerKey === "storeCloseRate" || layerKey === "unemploymentRate") {
+      // Higher is worse
+      const sorted = [...allValues].sort((a, b) => a - b);
+      const rank = sorted.indexOf(value) / Math.max(sorted.length - 1, 1);
+      const idx = Math.min(4, Math.floor(rank * 5));
+      return def.palette[idx];
+    }
+    // Default diverging
+    if (value >= 5) return def.palette[4];
+    if (value >= 2) return def.palette[3];
+    if (value >= 0) return def.palette[2];
+    if (value >= -2) return def.palette[1];
+    return def.palette[0];
   }
 
-  if (layerType === "growthRate") {
-    if (value >= 5) return "#10b981";
-    if (value >= 2) return "#34d399";
-    if (value >= 0) return "#fbbf24";
-    if (value >= -2) return "#f97316";
-    return "#ef4444";
-  }
-
-  // Quantile-based coloring for companyCount / employeeCount
+  // Quantile-based
   const sorted = [...allValues].sort((a, b) => a - b);
-  const rank = sorted.indexOf(value) / sorted.length;
+  const rank = sorted.indexOf(value) / Math.max(sorted.length - 1, 1);
+  if (rank >= 0.8) return def.palette[4];
+  if (rank >= 0.6) return def.palette[3];
+  if (rank >= 0.4) return def.palette[2];
+  if (rank >= 0.2) return def.palette[1];
+  return def.palette[0];
+}
 
-  if (layerType === "companyCount") {
-    if (rank >= 0.8) return "#7c3aed";
-    if (rank >= 0.6) return "#8b5cf6";
-    if (rank >= 0.4) return "#a78bfa";
-    if (rank >= 0.2) return "#c4b5fd";
-    return "#ddd6fe";
+export function formatLayerValue(value: number, layerKey: DataLayerKey): string {
+  const def = getLayerDef(layerKey);
+  if (!def) return String(value);
+  switch (def.format) {
+    case "number": return value.toLocaleString() + def.unit;
+    case "decimal": return value.toFixed(1) + def.unit;
+    case "percent": return value.toFixed(1) + "%";
+    case "signedPercent": return (value >= 0 ? "+" : "") + value.toFixed(1) + "%";
+    case "price": return value.toLocaleString() + def.unit;
+  }
+}
+
+// Legend bands (generated from layer definition)
+export function getLayerLegendBands(layerKey: DataLayerKey): { label: string; color: string }[] {
+  const def = getLayerDef(layerKey);
+  if (!def) return [];
+
+  if (layerKey === "healthScore") {
+    return HEALTH_BANDS.map((b) => ({ label: b.label, color: b.color }));
   }
 
-  if (rank >= 0.8) return "#0d9488";
-  if (rank >= 0.6) return "#14b8a6";
-  if (rank >= 0.4) return "#5eead4";
-  if (rank >= 0.2) return "#99f6e4";
-  return "#ccfbf1";
+  if (def.colorScheme === "diverging") {
+    if (layerKey === "growthRate" || layerKey === "populationGrowth" || layerKey === "priceChangeRate") {
+      return [
+        { label: "고성장 (5%+)", color: def.palette[4] },
+        { label: "성장 (2~5%)", color: def.palette[3] },
+        { label: "정체 (0~2%)", color: def.palette[2] },
+        { label: "감소 (0~-2%)", color: def.palette[1] },
+        { label: "급감 (-2% 이하)", color: def.palette[0] },
+      ];
+    }
+    return [
+      { label: "매우 낮음 (하위 20%)", color: def.palette[0] },
+      { label: "낮음", color: def.palette[1] },
+      { label: "보통", color: def.palette[2] },
+      { label: "높음", color: def.palette[3] },
+      { label: "매우 높음 (상위 20%)", color: def.palette[4] },
+    ];
+  }
+
+  return [
+    { label: `매우 많음 (상위 20%)`, color: def.palette[4] },
+    { label: "많음", color: def.palette[3] },
+    { label: "보통", color: def.palette[2] },
+    { label: "적음", color: def.palette[1] },
+    { label: `매우 적음 (하위 20%)`, color: def.palette[0] },
+  ];
 }
