@@ -9,6 +9,9 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "대시보드", icon: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm10 0a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z" },
   { href: "/analysis", label: "분석", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
   { href: "/rankings", label: "랭킹", icon: "M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" },
+  { href: "/compare", label: "비교", icon: "M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" },
+  { href: "/company", label: "기업", icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
+  { href: "/complex", label: "산업단지", icon: "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" },
 ];
 
 export default function GlobalNav() {
@@ -54,13 +57,6 @@ export default function GlobalNav() {
 
         {/* Right side */}
         <div className="ml-auto flex items-center gap-2">
-          <button className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[var(--bg-secondary)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <span className="hidden lg:inline">지역 검색</span>
-          </button>
-          <button className="hidden md:flex items-center px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent-light)] transition-colors">
-            로그인
-          </button>
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -98,11 +94,6 @@ export default function GlobalNav() {
                 </Link>
               );
             })}
-            <div className="pt-2 border-t border-[var(--border)]">
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-[var(--accent)] border border-[var(--accent)]/20">
-                로그인
-              </button>
-            </div>
           </div>
         </div>
       )}

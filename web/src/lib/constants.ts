@@ -77,18 +77,42 @@ export const PROVINCE_SHORT: Record<string, string> = {
   "39": "제주",
 };
 
-// ── Data Categories & Layers ──────────────────────────
+// ── Data Categories & Layers (13 categories, 65 layers) ──
 
-export type DataCategory = "industry" | "population" | "realEstate" | "employment" | "education" | "commercial" | "transport";
+export type DataCategory =
+  | "industry" | "population" | "economy" | "realEstate"
+  | "employment" | "education" | "commercial" | "healthcare"
+  | "safety" | "environment" | "infrastructure" | "transport" | "culture";
 
 export type DataLayerKey =
+  // Industry
   | "healthScore" | "companyCount" | "employeeCount" | "growthRate"
+  | "newBizRate" | "closureRate" | "manufacturingRatio" | "smeRatio"
+  // Population
   | "population" | "populationGrowth" | "agingRate" | "youthRatio"
-  | "avgLandPrice" | "priceChangeRate"
-  | "employmentRate" | "unemploymentRate"
-  | "schoolCount" | "studentCount"
-  | "storeCount" | "storeOpenRate" | "storeCloseRate"
-  | "transitScore";
+  | "birthRate" | "foreignRatio" | "netMigration"
+  // Economy
+  | "grdp" | "grdpGrowth" | "taxRevenue" | "financialIndependence" | "localConsumption"
+  // Real Estate
+  | "avgLandPrice" | "priceChangeRate" | "aptPrice" | "aptChangeRate" | "buildingPermits"
+  // Employment
+  | "employmentRate" | "unemploymentRate" | "avgWage" | "jobCreation" | "youthEmployment"
+  // Education
+  | "schoolCount" | "studentCount" | "universityCount" | "libraryCount" | "educationBudget"
+  // Commercial
+  | "storeCount" | "storeOpenRate" | "storeCloseRate" | "franchiseCount" | "salesPerStore"
+  // Healthcare
+  | "hospitalCount" | "doctorCount" | "bedsPerPopulation" | "seniorFacilities" | "daycareCenters"
+  // Safety
+  | "crimeRate" | "trafficAccidents" | "fireIncidents" | "disasterDamage"
+  // Environment
+  | "airQuality" | "greenAreaRatio" | "wasteGeneration" | "waterQuality"
+  // Infrastructure
+  | "roadDensity" | "waterSupply" | "sewerageRate" | "parkArea"
+  // Transportation
+  | "transitScore" | "subwayStations" | "busRoutes" | "dailyPassengers" | "avgCommute"
+  // Culture
+  | "culturalFacilities" | "touristVisitors" | "accommodations";
 
 export interface CategoryDef {
   key: DataCategory;
@@ -101,19 +125,23 @@ export interface LayerDef {
   key: DataLayerKey;
   label: string;
   unit: string;
-  format: "number" | "decimal" | "percent" | "signedPercent" | "price";
-  colorScheme: "health" | "quantile" | "diverging";
-  palette: string[]; // 5 colors from low to high
+  format: "number" | "decimal" | "percent" | "signedPercent" | "price" | "score";
+  colorScheme: "health" | "quantile" | "diverging" | "inverse";
+  palette: string[];
 }
 
 export const DATA_CATEGORIES: CategoryDef[] = [
   {
     key: "industry", label: "산업", icon: "🏭",
     layers: [
-      { key: "healthScore", label: "건강도", unit: "점", format: "decimal", colorScheme: "health", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
-      { key: "companyCount", label: "기업 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#ddd6fe","#c4b5fd","#a78bfa","#8b5cf6","#7c3aed"] },
-      { key: "employeeCount", label: "고용 인원", unit: "명", format: "number", colorScheme: "quantile", palette: ["#ccfbf1","#99f6e4","#5eead4","#14b8a6","#0d9488"] },
-      { key: "growthRate", label: "성장률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "healthScore", label: "산업건강도", unit: "점", format: "decimal", colorScheme: "health", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "companyCount", label: "사업체 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#ddd6fe","#c4b5fd","#a78bfa","#8b5cf6","#7c3aed"] },
+      { key: "employeeCount", label: "종사자 수", unit: "명", format: "number", colorScheme: "quantile", palette: ["#ccfbf1","#99f6e4","#5eead4","#14b8a6","#0d9488"] },
+      { key: "growthRate", label: "기업성장률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "newBizRate", label: "신규창업률", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#dcfce7","#86efac","#4ade80","#16a34a","#166534"] },
+      { key: "closureRate", label: "폐업률", unit: "%", format: "decimal", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "manufacturingRatio", label: "제조업 비중", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#e0e7ff","#a5b4fc","#818cf8","#6366f1","#4338ca"] },
+      { key: "smeRatio", label: "중소기업 비율", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#fce4ec","#f48fb1","#ec407a","#c2185b","#880e4f"] },
     ],
   },
   {
@@ -121,8 +149,21 @@ export const DATA_CATEGORIES: CategoryDef[] = [
     layers: [
       { key: "population", label: "총인구", unit: "명", format: "number", colorScheme: "quantile", palette: ["#fce4ec","#f48fb1","#ec407a","#c2185b","#880e4f"] },
       { key: "populationGrowth", label: "인구증감률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
-      { key: "agingRate", label: "고령화율", unit: "%", format: "decimal", colorScheme: "diverging", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "agingRate", label: "고령화율", unit: "%", format: "decimal", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
       { key: "youthRatio", label: "청년비율", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+      { key: "birthRate", label: "출생률", unit: "‰", format: "decimal", colorScheme: "quantile", palette: ["#fef3c7","#fcd34d","#f59e0b","#d97706","#92400e"] },
+      { key: "foreignRatio", label: "외국인비율", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+      { key: "netMigration", label: "순이동률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+    ],
+  },
+  {
+    key: "economy", label: "경제", icon: "💰",
+    layers: [
+      { key: "grdp", label: "지역내총생산", unit: "십억원", format: "number", colorScheme: "quantile", palette: ["#fef9c3","#fde047","#facc15","#ca8a04","#854d0e"] },
+      { key: "grdpGrowth", label: "GRDP 성장률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "taxRevenue", label: "지방세수입", unit: "억원", format: "number", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+      { key: "financialIndependence", label: "재정자립도", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#dcfce7","#86efac","#4ade80","#16a34a","#166534"] },
+      { key: "localConsumption", label: "지역소비", unit: "십억원", format: "number", colorScheme: "quantile", palette: ["#fce7f3","#f9a8d4","#f472b6","#db2777","#9d174d"] },
     ],
   },
   {
@@ -130,13 +171,19 @@ export const DATA_CATEGORIES: CategoryDef[] = [
     layers: [
       { key: "avgLandPrice", label: "평균지가", unit: "만원/㎡", format: "price", colorScheme: "quantile", palette: ["#fef9c3","#fde047","#facc15","#ca8a04","#854d0e"] },
       { key: "priceChangeRate", label: "지가변동률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "aptPrice", label: "아파트매매가", unit: "만원", format: "price", colorScheme: "quantile", palette: ["#fef3c7","#fcd34d","#f59e0b","#d97706","#92400e"] },
+      { key: "aptChangeRate", label: "아파트변동률", unit: "%", format: "signedPercent", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "buildingPermits", label: "건축허가", unit: "건", format: "number", colorScheme: "quantile", palette: ["#ddd6fe","#c4b5fd","#a78bfa","#8b5cf6","#7c3aed"] },
     ],
   },
   {
     key: "employment", label: "고용", icon: "💼",
     layers: [
       { key: "employmentRate", label: "고용률", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#dcfce7","#86efac","#4ade80","#16a34a","#166534"] },
-      { key: "unemploymentRate", label: "실업률", unit: "%", format: "decimal", colorScheme: "diverging", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "unemploymentRate", label: "실업률", unit: "%", format: "decimal", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "avgWage", label: "평균임금", unit: "만원", format: "price", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+      { key: "jobCreation", label: "일자리증감", unit: "개", format: "number", colorScheme: "diverging", palette: ["#ef4444","#f97316","#fbbf24","#34d399","#10b981"] },
+      { key: "youthEmployment", label: "청년고용률", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#ccfbf1","#99f6e4","#5eead4","#14b8a6","#0d9488"] },
     ],
   },
   {
@@ -144,6 +191,9 @@ export const DATA_CATEGORIES: CategoryDef[] = [
     layers: [
       { key: "schoolCount", label: "학교 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#e0e7ff","#a5b4fc","#818cf8","#6366f1","#4338ca"] },
       { key: "studentCount", label: "학생 수", unit: "명", format: "number", colorScheme: "quantile", palette: ["#ede9fe","#c4b5fd","#a78bfa","#7c3aed","#5b21b6"] },
+      { key: "universityCount", label: "대학 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#fce7f3","#f9a8d4","#f472b6","#db2777","#9d174d"] },
+      { key: "libraryCount", label: "도서관 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#ccfbf1","#99f6e4","#5eead4","#14b8a6","#0d9488"] },
+      { key: "educationBudget", label: "교육재정", unit: "억원", format: "number", colorScheme: "quantile", palette: ["#fef9c3","#fde047","#facc15","#ca8a04","#854d0e"] },
     ],
   },
   {
@@ -151,13 +201,64 @@ export const DATA_CATEGORIES: CategoryDef[] = [
     layers: [
       { key: "storeCount", label: "상가 수", unit: "개", format: "number", colorScheme: "quantile", palette: ["#fce7f3","#f9a8d4","#f472b6","#db2777","#9d174d"] },
       { key: "storeOpenRate", label: "개업률", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#dcfce7","#86efac","#4ade80","#16a34a","#166534"] },
-      { key: "storeCloseRate", label: "폐업률", unit: "%", format: "decimal", colorScheme: "diverging", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "storeCloseRate", label: "폐업률", unit: "%", format: "decimal", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "franchiseCount", label: "프랜차이즈", unit: "개", format: "number", colorScheme: "quantile", palette: ["#e0e7ff","#a5b4fc","#818cf8","#6366f1","#4338ca"] },
+      { key: "salesPerStore", label: "점포당매출", unit: "백만원", format: "number", colorScheme: "quantile", palette: ["#fef9c3","#fde047","#facc15","#ca8a04","#854d0e"] },
+    ],
+  },
+  {
+    key: "healthcare", label: "의료/복지", icon: "🏥",
+    layers: [
+      { key: "hospitalCount", label: "의료기관", unit: "개", format: "number", colorScheme: "quantile", palette: ["#fce4ec","#f48fb1","#ec407a","#c2185b","#880e4f"] },
+      { key: "doctorCount", label: "의사 수", unit: "명", format: "number", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+      { key: "bedsPerPopulation", label: "병상 수", unit: "개/천명", format: "decimal", colorScheme: "quantile", palette: ["#ccfbf1","#99f6e4","#5eead4","#14b8a6","#0d9488"] },
+      { key: "seniorFacilities", label: "노인복지시설", unit: "개", format: "number", colorScheme: "quantile", palette: ["#ddd6fe","#c4b5fd","#a78bfa","#8b5cf6","#7c3aed"] },
+      { key: "daycareCenters", label: "어린이집", unit: "개", format: "number", colorScheme: "quantile", palette: ["#fef3c7","#fcd34d","#f59e0b","#d97706","#92400e"] },
+    ],
+  },
+  {
+    key: "safety", label: "안전", icon: "🛡️",
+    layers: [
+      { key: "crimeRate", label: "범죄발생률", unit: "건/만명", format: "decimal", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "trafficAccidents", label: "교통사고", unit: "건", format: "number", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "fireIncidents", label: "화재발생", unit: "건", format: "number", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "disasterDamage", label: "재해피해액", unit: "백만원", format: "number", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+    ],
+  },
+  {
+    key: "environment", label: "환경", icon: "🌿",
+    layers: [
+      { key: "airQuality", label: "미세먼지", unit: "㎍/㎥", format: "decimal", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "greenAreaRatio", label: "녹지비율", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#dcfce7","#86efac","#4ade80","#16a34a","#166534"] },
+      { key: "wasteGeneration", label: "폐기물발생", unit: "톤/일", format: "number", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+      { key: "waterQuality", label: "수질등급", unit: "등급", format: "decimal", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+    ],
+  },
+  {
+    key: "infrastructure", label: "인프라", icon: "🏗️",
+    layers: [
+      { key: "roadDensity", label: "도로율", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#e0e7ff","#a5b4fc","#818cf8","#6366f1","#4338ca"] },
+      { key: "waterSupply", label: "상수도보급률", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+      { key: "sewerageRate", label: "하수도보급률", unit: "%", format: "decimal", colorScheme: "quantile", palette: ["#ccfbf1","#99f6e4","#5eead4","#14b8a6","#0d9488"] },
+      { key: "parkArea", label: "1인당 공원면적", unit: "㎡", format: "decimal", colorScheme: "quantile", palette: ["#dcfce7","#86efac","#4ade80","#16a34a","#166534"] },
     ],
   },
   {
     key: "transport", label: "교통", icon: "🚇",
     layers: [
-      { key: "transitScore", label: "교통접근성", unit: "점", format: "decimal", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+      { key: "transitScore", label: "대중교통접근성", unit: "점", format: "decimal", colorScheme: "quantile", palette: ["#e0f2fe","#7dd3fc","#38bdf8","#0284c7","#075985"] },
+      { key: "subwayStations", label: "지하철역", unit: "개", format: "number", colorScheme: "quantile", palette: ["#ddd6fe","#c4b5fd","#a78bfa","#8b5cf6","#7c3aed"] },
+      { key: "busRoutes", label: "버스노선", unit: "개", format: "number", colorScheme: "quantile", palette: ["#fce7f3","#f9a8d4","#f472b6","#db2777","#9d174d"] },
+      { key: "dailyPassengers", label: "일일이용객", unit: "명", format: "number", colorScheme: "quantile", palette: ["#fef9c3","#fde047","#facc15","#ca8a04","#854d0e"] },
+      { key: "avgCommute", label: "평균통근시간", unit: "분", format: "decimal", colorScheme: "inverse", palette: ["#10b981","#34d399","#fbbf24","#f97316","#ef4444"] },
+    ],
+  },
+  {
+    key: "culture", label: "문화관광", icon: "🎭",
+    layers: [
+      { key: "culturalFacilities", label: "문화시설", unit: "개", format: "number", colorScheme: "quantile", palette: ["#fce7f3","#f9a8d4","#f472b6","#db2777","#9d174d"] },
+      { key: "touristVisitors", label: "관광객 수", unit: "천명", format: "number", colorScheme: "quantile", palette: ["#fef3c7","#fcd34d","#f59e0b","#d97706","#92400e"] },
+      { key: "accommodations", label: "숙박시설", unit: "개", format: "number", colorScheme: "quantile", palette: ["#e0e7ff","#a5b4fc","#818cf8","#6366f1","#4338ca"] },
     ],
   },
 ];
@@ -207,26 +308,26 @@ export function getLayerColor(layerKey: DataLayerKey, value: number, allValues: 
   if (layerKey === "healthScore") return getHealthColor(value);
 
   if (def.colorScheme === "diverging") {
-    if (layerKey === "growthRate" || layerKey === "populationGrowth" || layerKey === "priceChangeRate") {
+    // Signed-percent diverging layers (growth rates)
+    const divergingKeys: DataLayerKey[] = [
+      "growthRate", "populationGrowth", "priceChangeRate",
+      "aptChangeRate", "grdpGrowth", "netMigration", "jobCreation",
+    ];
+    if (divergingKeys.includes(layerKey)) {
       if (value >= 5) return def.palette[4];
       if (value >= 2) return def.palette[3];
       if (value >= 0) return def.palette[2];
       if (value >= -2) return def.palette[1];
       return def.palette[0];
     }
-    if (layerKey === "agingRate" || layerKey === "storeCloseRate" || layerKey === "unemploymentRate") {
-      const sorted = [...allValues].sort((a, b) => a - b);
-      const rank = percentileRank(value, sorted);
-      const idx = Math.min(4, Math.max(0, Math.floor(rank * 4.999)));
-      return def.palette[idx];
-    }
-    if (value >= 5) return def.palette[4];
-    if (value >= 2) return def.palette[3];
-    if (value >= 0) return def.palette[2];
-    if (value >= -2) return def.palette[1];
-    return def.palette[0];
+    // Fallback diverging: quantile-based
+    const sorted = [...allValues].sort((a, b) => a - b);
+    const rank = percentileRank(value, sorted);
+    const idx = Math.min(4, Math.max(0, Math.floor(rank * 4.999)));
+    return def.palette[idx];
   }
 
+  // "inverse" is same logic as "quantile" but palette is already reversed
   // Quantile-based
   const sorted = [...allValues].sort((a, b) => a - b);
   const rank = percentileRank(value, sorted);
@@ -246,10 +347,11 @@ export function formatLayerValue(value: number, layerKey: DataLayerKey): string 
     case "percent": return value.toFixed(1) + "%";
     case "signedPercent": return (value >= 0 ? "+" : "") + value.toFixed(1) + "%";
     case "price": return value.toLocaleString() + def.unit;
+    case "score": return value.toFixed(1) + def.unit;
   }
 }
 
-// Legend bands (generated from layer definition)
+// Legend bands
 export function getLayerLegendBands(layerKey: DataLayerKey): { label: string; color: string }[] {
   const def = getLayerDef(layerKey);
   if (!def) return [];
@@ -259,7 +361,11 @@ export function getLayerLegendBands(layerKey: DataLayerKey): { label: string; co
   }
 
   if (def.colorScheme === "diverging") {
-    if (layerKey === "growthRate" || layerKey === "populationGrowth" || layerKey === "priceChangeRate") {
+    const divergingKeys: DataLayerKey[] = [
+      "growthRate", "populationGrowth", "priceChangeRate",
+      "aptChangeRate", "grdpGrowth", "netMigration", "jobCreation",
+    ];
+    if (divergingKeys.includes(layerKey)) {
       return [
         { label: "고성장 (5%+)", color: def.palette[4] },
         { label: "성장 (2~5%)", color: def.palette[3] },
@@ -277,11 +383,21 @@ export function getLayerLegendBands(layerKey: DataLayerKey): { label: string; co
     ];
   }
 
+  if (def.colorScheme === "inverse") {
+    return [
+      { label: "매우 양호 (하위 20%)", color: def.palette[0] },
+      { label: "양호", color: def.palette[1] },
+      { label: "보통", color: def.palette[2] },
+      { label: "주의", color: def.palette[3] },
+      { label: "심각 (상위 20%)", color: def.palette[4] },
+    ];
+  }
+
   return [
-    { label: `매우 많음 (상위 20%)`, color: def.palette[4] },
-    { label: "많음", color: def.palette[3] },
+    { label: "매우 높음 (상위 20%)", color: def.palette[4] },
+    { label: "높음", color: def.palette[3] },
     { label: "보통", color: def.palette[2] },
-    { label: "적음", color: def.palette[1] },
-    { label: `매우 적음 (하위 20%)`, color: def.palette[0] },
+    { label: "낮음", color: def.palette[1] },
+    { label: "매우 낮음 (하위 20%)", color: def.palette[0] },
   ];
 }

@@ -70,12 +70,12 @@ function OverviewTab() {
         전국 250개 시군구의 산업 생태계를 포함한 종합 지역 데이터를 지도 위에 시각화하는 플랫폼입니다.
       </p>
       <div className="bg-[var(--bg-secondary)] rounded-xl p-4 space-y-2">
-        <div className="text-xs text-[var(--text-tertiary)] font-medium mb-2">7개 데이터 카테고리</div>
+        <div className="text-xs text-[var(--text-tertiary)] font-medium mb-2">13개 데이터 카테고리 · 65개 지표</div>
         <div className="grid grid-cols-2 gap-2 text-xs">
           {DATA_CATEGORIES.map((cat) => (
             <div key={cat.key} className="flex items-center gap-2">
               <span className="text-base">{cat.icon}</span>
-              <span><b className="text-[var(--text-primary)]">{cat.label}</b> — {cat.layers.map((l) => l.label).join(", ")}</span>
+              <span><b className="text-[var(--text-primary)]">{cat.label}</b> — {cat.layers.length}개 레이어</span>
             </div>
           ))}
         </div>
@@ -99,7 +99,7 @@ function OverviewTab() {
         </div>
       </div>
       <p className="text-xs text-[var(--text-tertiary)]">
-        2005년부터 2025년까지 20년간의 시계열 데이터를 통해 각 지역의 변화 추이를 분석할 수 있습니다.
+        2000년부터 2025년까지 26년간의 시계열 데이터를 통해 각 지역의 변화 추이를 분석할 수 있습니다.
       </p>
     </div>
   );
@@ -125,11 +125,11 @@ function HealthScoreTab() {
         <div className="text-xs text-[var(--text-tertiary)] font-medium">등급 기준</div>
         <div className="flex gap-2">
           {[
-            { label: "활발", range: "90+", color: "#16a34a" },
-            { label: "양호", range: "70-89", color: "#22c55e" },
-            { label: "보통", range: "50-69", color: "#eab308" },
+            { label: "활발", range: "90+", color: "#10b981" },
+            { label: "양호", range: "70-89", color: "#34d399" },
+            { label: "보통", range: "50-69", color: "#fbbf24" },
             { label: "주의", range: "30-49", color: "#f97316" },
-            { label: "위험", range: "<30", color: "#dc2626" },
+            { label: "위험", range: "<30", color: "#ef4444" },
           ].map((b) => (
             <div key={b.label} className="flex-1 rounded-lg p-2 text-center" style={{ backgroundColor: b.color + "12", border: `1px solid ${b.color}25` }}>
               <div className="text-xs font-bold" style={{ color: b.color }}>{b.label}</div>
@@ -177,10 +177,11 @@ function HowtoTab() {
       <div className="space-y-3">
         {[
           { title: "지역 탐색", desc: "왼쪽 패널에서 지역을 검색하거나, 광역시/도 필터로 지역을 좁히세요. 스크롤 휠이나 더블클릭으로 지도를 줌인/줌아웃할 수 있습니다." },
-          { title: "카테고리 & 레이어", desc: "상단의 7개 카테고리(산업, 인구, 부동산, 고용, 교육, 상권, 교통) 탭을 전환하고, 각 카테고리의 세부 레이어를 선택하세요." },
+          { title: "카테고리 & 레이어", desc: "상단의 13개 카테고리(산업, 인구, 경제, 부동산, 고용, 교육, 상권, 의료/복지, 안전, 환경, 인프라, 교통, 문화관광) 탭을 전환하고, 각 카테고리의 세부 레이어를 선택하세요." },
+          { title: "교통 인프라 오버레이", desc: "지도 오른쪽 상단의 '지하철', '고속도로' 버튼으로 전국 지하철 노선과 고속도로를 지도 위에 표시할 수 있습니다." },
           { title: "지도 클릭 / 목록 클릭", desc: "지도 위의 지역을 클릭하면 상세 정보가 표시됩니다. 더블클릭하면 해당 지역으로 줌인됩니다." },
-          { title: "타임라인 재생", desc: "하단 타임라인에서 2005~2025년 데이터를 재생하세요. 재생 버튼을 누르면 자동 재생되고, 속도(0.5x~4x)를 조절할 수 있습니다." },
-          { title: "시계열 트렌드", desc: "지역 선택 시 오른쪽 패널에서 선택한 레이어의 20년 변화 추이 그래프를 확인할 수 있습니다." },
+          { title: "타임라인 재생", desc: "하단 타임라인에서 2000~2025년 데이터를 재생하세요. 재생 버튼을 누르면 자동 재생되고, 속도(0.5x~4x)를 조절할 수 있습니다." },
+          { title: "시계열 트렌드", desc: "지역 선택 시 오른쪽 패널에서 선택한 레이어의 26년 변화 추이 그래프를 확인할 수 있습니다." },
           { title: "데이터 내보내기", desc: "왼쪽 패널의 CSV 버튼으로 현재 데이터를 엑셀 파일로 다운로드하세요. 선택한 연도와 지역 필터가 반영됩니다." },
           { title: "초기화", desc: "타임라인의 초기화 버튼을 눌러 모든 설정을 기본값으로 되돌릴 수 있습니다." },
         ].map((step, i) => (

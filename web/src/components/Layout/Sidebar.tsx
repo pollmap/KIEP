@@ -40,6 +40,40 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ region, allRegions, onClose, activeLayer, historicalData, currentYear }: SidebarProps) {
+  // All hooks MUST be called before any early return (React rules of hooks)
+  const healthRank = useMemo(() => {
+    if (!region) return 0;
+    const sorted = [...allRegions].sort((a, b) => b.healthScore - a.healthScore);
+    return sorted.findIndex((r) => r.code === region.code) + 1;
+  }, [allRegions, region]);
+
+  const provincePrefix = region?.code.substring(0, 2) ?? "";
+  const provinceName = region ? (PROVINCES[provincePrefix] || region.province) : "";
+
+  const compareRegions = useMemo(() => {
+    if (!region) return [];
+    const sameProvList = allRegions
+      .filter((r) => r.code.substring(0, 2) === provincePrefix && r.code !== region.code)
+      .sort((a, b) => b.healthScore - a.healthScore);
+    if (sameProvList.length === 0) return [];
+    const picks: RegionData[] = [];
+    if (sameProvList.length > 0) picks.push(sameProvList[0]);
+    if (sameProvList.length > 2) picks.push(sameProvList[Math.floor(sameProvList.length / 2)]);
+    if (sameProvList.length > 1) picks.push(sameProvList[sameProvList.length - 1]);
+    return picks;
+  }, [allRegions, provincePrefix, region]);
+
+  const trendData = useMemo(() => {
+    if (!region || !historicalData || !historicalData.data[region.code]) return [];
+    const regionHist = historicalData.data[region.code];
+    const layerDef = getLayerDef(activeLayer);
+    if (!layerDef) return [];
+    return regionHist.map((d, i) => ({
+      year: historicalData.startYear + i,
+      value: d[activeLayer] ?? 0,
+    }));
+  }, [historicalData, region, activeLayer]);
+
   if (!region) return null;
 
   const industryData = Object.entries(region.industryDistribution)
@@ -53,39 +87,7 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
 
   const healthColor = getHealthColor(region.healthScore);
   const growthSign = region.growthRate >= 0 ? "+" : "";
-
-  const healthRank = useMemo(() => {
-    const sorted = [...allRegions].sort((a, b) => b.healthScore - a.healthScore);
-    return sorted.findIndex((r) => r.code === region.code) + 1;
-  }, [allRegions, region.code]);
-
-  const provincePrefix = region.code.substring(0, 2);
-  const provinceName = PROVINCES[provincePrefix] || region.province;
-
-  const compareRegions = useMemo(() => {
-    const sameProvList = allRegions
-      .filter((r) => r.code.substring(0, 2) === provincePrefix && r.code !== region.code)
-      .sort((a, b) => b.healthScore - a.healthScore);
-    if (sameProvList.length === 0) return [];
-    const picks: RegionData[] = [];
-    if (sameProvList.length > 0) picks.push(sameProvList[0]);
-    if (sameProvList.length > 2) picks.push(sameProvList[Math.floor(sameProvList.length / 2)]);
-    if (sameProvList.length > 1) picks.push(sameProvList[sameProvList.length - 1]);
-    return picks;
-  }, [allRegions, provincePrefix, region.code]);
-
   const band = HEALTH_BANDS.find((b) => region.healthScore >= b.min && region.healthScore <= b.max);
-
-  const trendData = useMemo(() => {
-    if (!historicalData || !historicalData.data[region.code]) return [];
-    const regionHist = historicalData.data[region.code];
-    const layerDef = getLayerDef(activeLayer);
-    if (!layerDef) return [];
-    return regionHist.map((d, i) => ({
-      year: historicalData.startYear + i,
-      value: d[activeLayer] ?? 0,
-    }));
-  }, [historicalData, region.code, activeLayer]);
 
   const currentLayerDef = getLayerDef(activeLayer);
   const currentCat = getCategoryForLayer(activeLayer);
@@ -234,22 +236,18 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 gap-px bg-[var(--border-light)]">
-        <MetricCard label="기업 수" value={region.companyCount.toLocaleString()} unit="개" />
-        <MetricCard label="고용 인원" value={region.employeeCount.toLocaleString()} unit="명" />
+        <MetricCard label="사업체 수" value={region.companyCount.toLocaleString()} unit="개" />
+        <MetricCard label="종사자 수" value={region.employeeCount.toLocaleString()} unit="명" />
         <MetricCard label="인구" value={region.population?.toLocaleString() ?? "N/A"} unit="명" />
         <MetricCard label="고령화율" value={region.agingRate?.toFixed(1) ?? "N/A"} unit="%" danger={(region.agingRate ?? 0) > 25} />
-        <MetricCard
-          label="신규 사업자 비율"
-          value={region.newBizRate.toFixed(1)}
-          unit="%"
-          positive={region.newBizRate > 5}
-        />
-        <MetricCard
-          label="폐업률"
-          value={region.closureRate.toFixed(1)}
-          unit="%"
-          danger={region.closureRate > 5}
-        />
+        <MetricCard label="GRDP" value={(region.grdp || 0).toLocaleString()} unit="십억원" />
+        <MetricCard label="재정자립도" value={(region.financialIndependence || 0).toFixed(1)} unit="%" />
+        <MetricCard label="고용률" value={(region.employmentRate || 0).toFixed(1)} unit="%" positive={(region.employmentRate || 0) > 65} />
+        <MetricCard label="실업률" value={(region.unemploymentRate || 0).toFixed(1)} unit="%" danger={(region.unemploymentRate || 0) > 5} />
+        <MetricCard label="평균지가" value={(region.avgLandPrice || 0).toLocaleString()} unit="만원/㎡" />
+        <MetricCard label="아파트매매가" value={(region.aptPrice || 0).toLocaleString()} unit="만원" />
+        <MetricCard label="범죄율" value={(region.crimeRate || 0).toFixed(1)} unit="건/만명" danger={(region.crimeRate || 0) > 60} />
+        <MetricCard label="미세먼지" value={(region.airQuality || 0).toFixed(1)} unit="㎍/㎥" danger={(region.airQuality || 0) > 30} />
       </div>
 
       {/* Industry Distribution */}

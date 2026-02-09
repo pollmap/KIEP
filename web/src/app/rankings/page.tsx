@@ -49,13 +49,17 @@ export default function RankingsPage() {
 
   const columns: { key: DataLayerKey; label: string; width: string }[] = [
     { key: "healthScore", label: "건강도", width: "w-20" },
-    { key: "companyCount", label: "기업 수", width: "w-24" },
-    { key: "employeeCount", label: "고용 인원", width: "w-24" },
+    { key: "companyCount", label: "사업체", width: "w-24" },
+    { key: "employeeCount", label: "종사자", width: "w-24" },
     { key: "population", label: "인구", width: "w-24" },
     { key: "agingRate", label: "고령화율", width: "w-20" },
     { key: "employmentRate", label: "고용률", width: "w-20" },
-    { key: "avgLandPrice", label: "평균지가", width: "w-24" },
+    { key: "grdp", label: "GRDP", width: "w-24" },
+    { key: "avgLandPrice", label: "지가", width: "w-24" },
+    { key: "aptPrice", label: "아파트가", width: "w-24" },
     { key: "growthRate", label: "성장률", width: "w-20" },
+    { key: "crimeRate", label: "범죄율", width: "w-20" },
+    { key: "airQuality", label: "미세먼지", width: "w-20" },
   ];
 
   if (loading) {

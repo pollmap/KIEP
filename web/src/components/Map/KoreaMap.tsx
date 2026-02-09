@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useRef, useCallback, useMemo, useState, useImperativeHandle, forwardRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { RegionData } from "@/lib/types";
@@ -20,6 +20,8 @@ interface KoreaMapProps {
   selectedRegion: string | null;
   onRegionSelect: (code: string | null) => void;
   activeLayer: DataLayerKey;
+  showSubway?: boolean;
+  showRoads?: boolean;
 }
 
 export interface KoreaMapHandle {
@@ -29,7 +31,7 @@ export interface KoreaMapHandle {
 }
 
 const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
-  { regions, geojson, selectedRegion, onRegionSelect, activeLayer },
+  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, showSubway = false, showRoads = false },
   ref
 ) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -42,7 +44,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
     geojsonRef.current = geojson;
   }, [geojson]);
 
-  const regionLookup = useCallback(() => {
+  const regionLookup = useMemo(() => {
     const m = new Map<string, RegionData>();
     regions.forEach((r) => m.set(r.code, r));
     return m;
@@ -164,7 +166,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
   useEffect(() => {
     if (!mapReady || !map.current || !geojson) return;
 
-    const lookup = regionLookup();
+    const lookup = regionLookup;
     const colorFn = buildColorMap(lookup, activeLayer);
     const layerDef = getLayerDef(activeLayer);
 
@@ -262,7 +264,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
               <strong>${data.name}</strong>
               <span style="color:#94a3b8;font-size:11px;margin-left:4px">${data.province}</span><br/>
               ${layerDef?.label ?? ""}: <b style="color:${colorFn(code)}">${formatted}</b><br/>
-              기업: ${data.companyCount.toLocaleString()} &middot; 인구: ${data.population?.toLocaleString() ?? "N/A"}
+              사업체: ${data.companyCount.toLocaleString()} · 인구: ${data.population?.toLocaleString() ?? "N/A"}
             </div>`
           )
           .addTo(map.current);
@@ -310,6 +312,109 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       map.current?.off("dblclick", "region-fills", onDblClick);
     };
   }, [mapReady, geojson, regions, activeLayer, regionLookup, buildColorMap, onRegionSelect, calcBounds]);
+
+  // Subway overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+
+    if (!m.getSource("subway-lines")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/subway-lines.json`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (!m.getSource("subway-lines")) {
+            m.addSource("subway-lines", { type: "geojson", data });
+            m.addLayer({
+              id: "subway-lines-layer",
+              type: "line",
+              source: "subway-lines",
+              paint: {
+                "line-color": ["get", "color"],
+                "line-width": 3,
+                "line-opacity": 0.8,
+              },
+              layout: { visibility: showSubway ? "visible" : "none" },
+            });
+            m.addLayer({
+              id: "subway-labels",
+              type: "symbol",
+              source: "subway-lines",
+              layout: {
+                "symbol-placement": "line",
+                "text-field": ["get", "name"],
+                "text-size": 11,
+                "text-font": ["Open Sans Regular"],
+                visibility: showSubway ? "visible" : "none",
+              },
+              paint: {
+                "text-color": ["get", "color"],
+                "text-halo-color": "#ffffff",
+                "text-halo-width": 1.5,
+              },
+              minzoom: 9,
+            });
+          }
+        })
+        .catch(() => {});
+    } else {
+      const vis = showSubway ? "visible" : "none";
+      if (m.getLayer("subway-lines-layer")) m.setLayoutProperty("subway-lines-layer", "visibility", vis);
+      if (m.getLayer("subway-labels")) m.setLayoutProperty("subway-labels", "visibility", vis);
+    }
+  }, [mapReady, showSubway]);
+
+  // Roads overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+
+    if (!m.getSource("major-roads")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/major-roads.json`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (!m.getSource("major-roads")) {
+            m.addSource("major-roads", { type: "geojson", data });
+            m.addLayer({
+              id: "roads-layer",
+              type: "line",
+              source: "major-roads",
+              paint: {
+                "line-color": ["get", "color"],
+                "line-width": ["case", ["==", ["get", "number"], "100"], 3, 2],
+                "line-opacity": 0.7,
+                "line-dasharray": [2, 1],
+              },
+              layout: { visibility: showRoads ? "visible" : "none" },
+            });
+            m.addLayer({
+              id: "roads-labels",
+              type: "symbol",
+              source: "major-roads",
+              layout: {
+                "symbol-placement": "line",
+                "text-field": ["get", "name"],
+                "text-size": 10,
+                "text-font": ["Open Sans Regular"],
+                visibility: showRoads ? "visible" : "none",
+              },
+              paint: {
+                "text-color": "#1e40af",
+                "text-halo-color": "#ffffff",
+                "text-halo-width": 1.5,
+              },
+              minzoom: 8,
+            });
+          }
+        })
+        .catch(() => {});
+    } else {
+      const vis = showRoads ? "visible" : "none";
+      if (m.getLayer("roads-layer")) m.setLayoutProperty("roads-layer", "visibility", vis);
+      if (m.getLayer("roads-labels")) m.setLayoutProperty("roads-labels", "visibility", vis);
+    }
+  }, [mapReady, showRoads]);
 
   // Highlight selected
   useEffect(() => {

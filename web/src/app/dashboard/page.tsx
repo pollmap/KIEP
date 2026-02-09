@@ -5,7 +5,7 @@ import { RegionData } from "@/lib/types";
 import { getHealthColor, PROVINCE_SHORT, DATA_CATEGORIES, HEALTH_BANDS } from "@/lib/constants";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell,
-  PieChart, Pie, AreaChart, Area,
+  PieChart, Pie,
 } from "recharts";
 
 export default function DashboardPage() {
@@ -30,7 +30,11 @@ export default function DashboardPage() {
     const avgAging = regions.reduce((s, r) => s + r.agingRate, 0) / regions.length;
     const avgEmployment = regions.reduce((s, r) => s + r.employmentRate, 0) / regions.length;
     const avgTransit = regions.reduce((s, r) => s + r.transitScore, 0) / regions.length;
-    return { avgHealth, totalPop, totalCompany, totalEmployee, avgGrowth, avgAging, avgEmployment, avgTransit };
+    const totalGrdp = regions.reduce((s, r) => s + (r.grdp || 0), 0);
+    const avgFinIndep = regions.reduce((s, r) => s + (r.financialIndependence || 0), 0) / regions.length;
+    const avgCrime = regions.reduce((s, r) => s + (r.crimeRate || 0), 0) / regions.length;
+    const avgAirQuality = regions.reduce((s, r) => s + (r.airQuality || 0), 0) / regions.length;
+    return { avgHealth, totalPop, totalCompany, totalEmployee, avgGrowth, avgAging, avgEmployment, avgTransit, totalGrdp, avgFinIndep, avgCrime, avgAirQuality };
   }, [regions]);
 
   const provinceData = useMemo(() => {
@@ -95,15 +99,19 @@ export default function DashboardPage() {
 
         {/* Key Stats */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <StatCard label="평균 산업 건강도" value={stats.avgHealth.toFixed(1)} unit="점" color={getHealthColor(stats.avgHealth)} />
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+            <StatCard label="평균 산업건강도" value={stats.avgHealth.toFixed(1)} unit="점" color={getHealthColor(stats.avgHealth)} />
             <StatCard label="총 인구" value={(stats.totalPop / 10000).toFixed(0)} unit="만명" />
-            <StatCard label="총 기업 수" value={(stats.totalCompany / 10000).toFixed(1)} unit="만개" />
-            <StatCard label="총 고용 인원" value={(stats.totalEmployee / 10000).toFixed(1)} unit="만명" />
+            <StatCard label="총 사업체 수" value={(stats.totalCompany / 10000).toFixed(1)} unit="만개" />
+            <StatCard label="총 종사자 수" value={(stats.totalEmployee / 10000).toFixed(1)} unit="만명" />
             <StatCard label="평균 성장률" value={stats.avgGrowth.toFixed(1)} unit="%" positive={stats.avgGrowth > 0} negative={stats.avgGrowth < 0} />
             <StatCard label="평균 고령화율" value={stats.avgAging.toFixed(1)} unit="%" danger={stats.avgAging > 20} />
             <StatCard label="평균 고용률" value={stats.avgEmployment.toFixed(1)} unit="%" />
+            <StatCard label="총 GRDP" value={(stats.totalGrdp / 1000).toFixed(0)} unit="조원" />
+            <StatCard label="평균 재정자립도" value={stats.avgFinIndep.toFixed(1)} unit="%" />
             <StatCard label="평균 교통접근성" value={stats.avgTransit.toFixed(1)} unit="점" />
+            <StatCard label="평균 범죄율" value={stats.avgCrime.toFixed(1)} unit="건/만명" danger={stats.avgCrime > 60} />
+            <StatCard label="평균 미세먼지" value={stats.avgAirQuality.toFixed(1)} unit="㎍/㎥" danger={stats.avgAirQuality > 25} />
           </div>
         )}
 
@@ -208,7 +216,7 @@ export default function DashboardPage() {
         {/* Data Categories Overview */}
         <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">데이터 카테고리</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3">
             {DATA_CATEGORIES.map((cat) => (
               <div key={cat.key} className="p-3 rounded-xl bg-[var(--bg-secondary)] text-center">
                 <div className="text-2xl mb-1">{cat.icon}</div>

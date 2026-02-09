@@ -167,7 +167,7 @@ export default function AnalysisPage() {
           <div className="flex flex-wrap items-start gap-4 mb-4">
             <div>
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">지역별 추세 비교</h3>
-              <p className="text-xs text-[var(--text-tertiary)] mt-0.5">최대 8개 지역의 20년간 변화를 비교합니다</p>
+              <p className="text-xs text-[var(--text-tertiary)] mt-0.5">최대 8개 지역의 26년간 변화를 비교합니다 (2000~2025)</p>
             </div>
             <div className="flex items-center gap-2 ml-auto">
               <select

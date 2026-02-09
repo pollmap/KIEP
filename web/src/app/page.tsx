@@ -23,6 +23,24 @@ const KoreaMap = dynamic(() => import("@/components/Map/KoreaMap"), {
 
 const END_YEAR = 2025;
 
+// All numeric keys to merge from historical data
+const HISTORICAL_KEYS = [
+  "healthScore", "companyCount", "employeeCount", "growthRate",
+  "population", "populationGrowth", "agingRate", "youthRatio",
+  "birthRate", "foreignRatio", "netMigration",
+  "grdp", "grdpGrowth", "taxRevenue", "financialIndependence", "localConsumption",
+  "avgLandPrice", "priceChangeRate", "aptPrice", "aptChangeRate", "buildingPermits",
+  "employmentRate", "unemploymentRate", "avgWage", "jobCreation", "youthEmployment",
+  "schoolCount", "studentCount", "universityCount", "libraryCount", "educationBudget",
+  "storeCount", "storeOpenRate", "storeCloseRate", "franchiseCount", "salesPerStore",
+  "hospitalCount", "doctorCount", "bedsPerPopulation", "seniorFacilities", "daycareCenters",
+  "crimeRate", "trafficAccidents", "fireIncidents", "disasterDamage",
+  "airQuality", "greenAreaRatio", "wasteGeneration", "waterQuality",
+  "roadDensity", "waterSupply", "sewerageRate", "parkArea",
+  "transitScore", "subwayStations", "busRoutes", "dailyPassengers", "avgCommute",
+  "culturalFacilities", "touristVisitors", "accommodations",
+] as const;
+
 export default function MapPage() {
   const [baseRegions, setBaseRegions] = useState<RegionData[]>([]);
   const [geojson, setGeojson] = useState<GeoJSON.FeatureCollection | null>(null);
@@ -36,6 +54,8 @@ export default function MapPage() {
   const [currentYear, setCurrentYear] = useState(END_YEAR);
   const [panelOpen, setPanelOpen] = useState(true);
   const [mobileDetail, setMobileDetail] = useState(false);
+  const [showSubway, setShowSubway] = useState(false);
+  const [showRoads, setShowRoads] = useState(false);
   const mapRef = useRef<KoreaMapHandle>(null);
 
   useEffect(() => {
@@ -65,27 +85,11 @@ export default function MapPage() {
     return baseRegions.map((r) => {
       const h = historicalData.data[r.code]?.[yearIdx];
       if (!h) return r;
-      return {
-        ...r,
-        healthScore: h.healthScore ?? r.healthScore,
-        companyCount: h.companyCount ?? r.companyCount,
-        employeeCount: h.employeeCount ?? r.employeeCount,
-        growthRate: h.growthRate ?? r.growthRate,
-        population: h.population ?? r.population,
-        populationGrowth: h.populationGrowth ?? r.populationGrowth,
-        agingRate: h.agingRate ?? r.agingRate,
-        youthRatio: h.youthRatio ?? r.youthRatio,
-        avgLandPrice: h.avgLandPrice ?? r.avgLandPrice,
-        priceChangeRate: h.priceChangeRate ?? r.priceChangeRate,
-        employmentRate: h.employmentRate ?? r.employmentRate,
-        unemploymentRate: h.unemploymentRate ?? r.unemploymentRate,
-        schoolCount: h.schoolCount ?? r.schoolCount,
-        studentCount: h.studentCount ?? r.studentCount,
-        storeCount: h.storeCount ?? r.storeCount,
-        storeOpenRate: h.storeOpenRate ?? r.storeOpenRate,
-        storeCloseRate: h.storeCloseRate ?? r.storeCloseRate,
-        transitScore: h.transitScore ?? r.transitScore,
-      };
+      const merged = { ...r } as Record<string, unknown> & RegionData;
+      for (const key of HISTORICAL_KEYS) {
+        if (h[key] !== undefined) (merged as Record<string, unknown>)[key] = h[key];
+      }
+      return merged;
     });
   }, [baseRegions, historicalData, currentYear]);
 
@@ -100,8 +104,38 @@ export default function MapPage() {
   }, []);
   const handleExportCSV = useCallback(() => {
     const displayed = provinceFilter ? regions.filter((r) => r.code.startsWith(provinceFilter)) : regions;
-    const header = "지역코드,지역명,광역시도,건강도,기업수,고용인원,인구,고령화율,평균지가,고용률,상가수,교통접근성,성장률";
-    const rows = displayed.map((r) => [r.code, r.name, r.province, r.healthScore, r.companyCount, r.employeeCount, r.population, r.agingRate, r.avgLandPrice, r.employmentRate, r.storeCount, r.transitScore, r.growthRate].join(","));
+    const header = [
+      "지역코드","지역명","광역시도",
+      "산업건강도","사업체수","종사자수","기업성장률","신규창업률","폐업률","제조업비중","중소기업비율",
+      "인구","인구증감률","고령화율","청년비율","출생률","외국인비율","순이동률",
+      "GRDP","GRDP성장률","지방세수입","재정자립도","지역소비",
+      "평균지가","지가변동률","아파트매매가","아파트가격변동률","건축허가건수",
+      "고용률","실업률","평균임금","일자리증감","청년고용률",
+      "학교수","학생수","대학수","도서관수","교육재정",
+      "상가수","개업률","폐업률_상권","프랜차이즈수","점포당매출",
+      "의료기관수","의사수","병상수_천명당","노인복지시설","어린이집수",
+      "범죄율","교통사고","화재건수","재해피해액",
+      "미세먼지","녹지비율","폐기물발생량","수질등급",
+      "도로율","상수도보급률","하수도보급률","1인당공원면적",
+      "교통접근성","지하철역수","버스노선수","일일이용객","평균통근시간",
+      "문화시설수","관광객수","숙박시설수",
+    ].join(",");
+    const rows = displayed.map((r) => [
+      r.code, r.name, r.province,
+      r.healthScore, r.companyCount, r.employeeCount, r.growthRate, r.newBizRate, r.closureRate, r.manufacturingRatio, r.smeRatio,
+      r.population, r.populationGrowth, r.agingRate, r.youthRatio, r.birthRate, r.foreignRatio, r.netMigration,
+      r.grdp, r.grdpGrowth, r.taxRevenue, r.financialIndependence, r.localConsumption,
+      r.avgLandPrice, r.priceChangeRate, r.aptPrice, r.aptChangeRate, r.buildingPermits,
+      r.employmentRate, r.unemploymentRate, r.avgWage, r.jobCreation, r.youthEmployment,
+      r.schoolCount, r.studentCount, r.universityCount, r.libraryCount, r.educationBudget,
+      r.storeCount, r.storeOpenRate, r.storeCloseRate, r.franchiseCount, r.salesPerStore,
+      r.hospitalCount, r.doctorCount, r.bedsPerPopulation, r.seniorFacilities, r.daycareCenters,
+      r.crimeRate, r.trafficAccidents, r.fireIncidents, r.disasterDamage,
+      r.airQuality, r.greenAreaRatio, r.wasteGeneration, r.waterQuality,
+      r.roadDensity, r.waterSupply, r.sewerageRate, r.parkArea,
+      r.transitScore, r.subwayStations, r.busRoutes, r.dailyPassengers, r.avgCommute,
+      r.culturalFacilities, r.touristVisitors, r.accommodations,
+    ].join(","));
     const blob = new Blob(["\uFEFF" + [header, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url;
@@ -143,13 +177,31 @@ export default function MapPage() {
 
       {/* Map */}
       <div className="flex-1 relative">
-        <KoreaMap ref={mapRef} regions={displayedRegions} geojson={geojson} selectedRegion={selectedCode} onRegionSelect={handleRegionSelect} activeLayer={activeLayer} />
+        <KoreaMap ref={mapRef} regions={displayedRegions} geojson={geojson} selectedRegion={selectedCode} onRegionSelect={handleRegionSelect} activeLayer={activeLayer} showSubway={showSubway} showRoads={showRoads} />
 
         {/* Top controls */}
         <div className="absolute top-3 left-3 right-3 z-10 pointer-events-none">
           <div className="pointer-events-auto">
             <MapControls activeLayer={activeLayer} onLayerChange={setActiveLayer} onHelpOpen={() => setShowHelp(true)} />
           </div>
+        </div>
+
+        {/* Overlay toggles - top right */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5">
+          <button
+            onClick={() => setShowSubway(!showSubway)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm transition-all ${showSubway ? "bg-[#0052A4] text-white" : "bg-white/90 text-[var(--text-secondary)] border border-[var(--border)] hover:bg-white"}`}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+            지하철
+          </button>
+          <button
+            onClick={() => setShowRoads(!showRoads)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm transition-all ${showRoads ? "bg-[#1e40af] text-white" : "bg-white/90 text-[var(--text-secondary)] border border-[var(--border)] hover:bg-white"}`}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 20L8 4M16 20l4-16M3 12h18"/></svg>
+            고속도로
+          </button>
         </div>
 
         {/* Bottom-left: Legend + Timeline stacked */}
@@ -200,7 +252,11 @@ function OnboardingOverlay({ onClose, onOpenGuide }: { onClose: () => void; onOp
           <div className="text-3xl font-bold mb-1"><span className="text-[var(--accent)]">K</span>IEP</div>
           <div className="text-sm text-[var(--text-tertiary)] mb-6">Korea Industrial Ecosystem Platform</div>
           <div className="text-left space-y-3 mb-8">
-            {["전국 250개 시군구의 산업, 인구, 부동산, 고용, 교육, 상권, 교통 데이터를 한눈에.", "7개 카테고리 / 18개 레이어로 다양한 관점 분석.", "2005~2025년 타임라인으로 20년간 변화 재생."].map((text, i) => (
+            {[
+              "전국 250개 시군구의 산업, 경제, 인구, 부동산, 고용 등 13개 분야 65개 지표를 한눈에.",
+              "지하철 노선, 고속도로 등 교통 인프라를 지도 위에 시각화.",
+              "2000~2025년 타임라인으로 26년간 변화를 재생하고 비교.",
+            ].map((text, i) => (
               <div key={i} className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</div>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{text}</p>
