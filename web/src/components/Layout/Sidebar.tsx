@@ -70,7 +70,7 @@ export default function Sidebar({ region, allRegions, onClose }: SidebarProps) {
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 text-gray-500 hover:text-white transition-colors text-sm"
           >
-            x
+            &times;
           </button>
         </div>
       </div>
@@ -101,6 +101,28 @@ export default function Sidebar({ region, allRegions, onClose }: SidebarProps) {
             className="h-full rounded-full transition-all duration-500"
             style={{ width: `${region.healthScore}%`, backgroundColor: healthColor }}
           />
+        </div>
+
+        {/* Health score breakdown */}
+        <div className="mt-3 grid grid-cols-5 gap-1">
+          {HEALTH_BANDS.map((b) => {
+            const isActive = region.healthScore >= b.min && region.healthScore <= b.max;
+            return (
+              <div
+                key={b.label}
+                className={`text-center py-1 rounded text-[9px] transition-all ${
+                  isActive ? "ring-1" : "opacity-40"
+                }`}
+                style={{
+                  backgroundColor: b.color + "15",
+                  color: b.color,
+                  boxShadow: isActive ? `inset 0 0 0 1px ${b.color}` : undefined,
+                }}
+              >
+                {b.label.split(" ")[0]}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -168,7 +190,7 @@ export default function Sidebar({ region, allRegions, onClose }: SidebarProps) {
       {/* Same Province Comparison */}
       {sameProvince.length > 0 && (
         <div className="p-4">
-          <div className="text-[10px] text-gray-500 mb-2">{region.province} 내 다른 지역</div>
+          <div className="text-[10px] text-gray-500 mb-2">{region.province} 내 비교</div>
           <div className="h-[140px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
