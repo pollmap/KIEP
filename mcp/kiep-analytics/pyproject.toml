@@ -1,0 +1,13 @@
+[project]
+name = "kiep-analytics"
+version = "0.1.0"
+description = "KIEP Industrial Ecosystem MCP Analytics Server"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.0.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.0",
+]
+
+[project.scripts]
+kiep-mcp = "server:main"

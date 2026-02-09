@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "kiep-analytics": {
+      "command": "python",
+      "args": ["-m", "server"],
+      "cwd": "mcp/kiep-analytics",
+      "env": {
+        "KIEP_API_URL": "http://localhost:3100"
+      }
+    }
+  }
+}
