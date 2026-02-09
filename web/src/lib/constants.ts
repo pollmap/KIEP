@@ -51,21 +51,21 @@ export const INDUSTRY_COLORS: Record<string, string> = {
 
 export const PROVINCES: Record<string, string> = {
   "11": "서울특별시",
-  "26": "부산광역시",
-  "27": "대구광역시",
-  "28": "인천광역시",
-  "29": "광주광역시",
-  "30": "대전광역시",
-  "31": "울산광역시",
-  "36": "세종특별자치시",
-  "41": "경기도",
-  "42": "강원특별자치도",
-  "43": "충청북도",
-  "44": "충청남도",
-  "45": "전북특별자치도",
-  "46": "전라남도",
-  "47": "경상북도",
-  "48": "경상남도",
+  "21": "부산광역시",
+  "22": "대구광역시",
+  "23": "인천광역시",
+  "24": "광주광역시",
+  "25": "대전광역시",
+  "26": "울산광역시",
+  "29": "세종특별자치시",
+  "31": "경기도",
+  "32": "강원특별자치도",
+  "33": "충청북도",
+  "34": "충청남도",
+  "35": "전북특별자치도",
+  "36": "전라남도",
+  "37": "경상북도",
+  "38": "경상남도",
   "39": "제주특별자치도",
 };
 
@@ -107,28 +107,68 @@ export function getBasemapTiles(style: BasemapStyle): { url: string; attribution
   }
 }
 
+// Layer-specific color bands for legend and coloring
+export const LAYER_COLOR_BANDS: Record<MapLayerType, { label: string; color: string; min?: number; max?: number }[]> = {
+  healthScore: [
+    { label: "활발 (90+)", color: "#10b981", min: 90, max: 100 },
+    { label: "양호 (70-89)", color: "#34d399", min: 70, max: 89 },
+    { label: "보통 (50-69)", color: "#fbbf24", min: 50, max: 69 },
+    { label: "주의 (30-49)", color: "#f97316", min: 30, max: 49 },
+    { label: "위험 (<30)", color: "#ef4444", min: 0, max: 29 },
+  ],
+  companyCount: [
+    { label: "매우 많음 (상위 20%)", color: "#7c3aed" },
+    { label: "많음", color: "#8b5cf6" },
+    { label: "보통", color: "#a78bfa" },
+    { label: "적음", color: "#c4b5fd" },
+    { label: "매우 적음 (하위 20%)", color: "#ddd6fe" },
+  ],
+  employeeCount: [
+    { label: "매우 많음 (상위 20%)", color: "#0d9488" },
+    { label: "많음", color: "#14b8a6" },
+    { label: "보통", color: "#5eead4" },
+    { label: "적음", color: "#99f6e4" },
+    { label: "매우 적음 (하위 20%)", color: "#ccfbf1" },
+  ],
+  growthRate: [
+    { label: "고성장 (5%+)", color: "#10b981" },
+    { label: "성장 (2-5%)", color: "#34d399" },
+    { label: "정체 (0-2%)", color: "#fbbf24" },
+    { label: "감소 (0~-2%)", color: "#f97316" },
+    { label: "급감소 (-2% 이하)", color: "#ef4444" },
+  ],
+};
+
 export function getLayerColor(layerType: MapLayerType, value: number, allValues: number[]): string {
   if (layerType === "healthScore") {
     return getHealthColor(value);
   }
 
-  // For other layers, use quantile-based coloring
+  if (layerType === "growthRate") {
+    if (value >= 5) return "#10b981";
+    if (value >= 2) return "#34d399";
+    if (value >= 0) return "#fbbf24";
+    if (value >= -2) return "#f97316";
+    return "#ef4444";
+  }
+
+  // Quantile-based coloring for companyCount / employeeCount
   const sorted = [...allValues].sort((a, b) => a - b);
   const rank = sorted.indexOf(value) / sorted.length;
 
-  if (layerType === "growthRate") {
-    // Diverging: red(-) → yellow(0) → green(+)
-    if (value < -2) return "#ef4444";
-    if (value < 0) return "#f97316";
-    if (value < 2) return "#fbbf24";
-    if (value < 5) return "#34d399";
-    return "#10b981";
+  if (layerType === "companyCount") {
+    // Purple gradient
+    if (rank >= 0.8) return "#7c3aed";
+    if (rank >= 0.6) return "#8b5cf6";
+    if (rank >= 0.4) return "#a78bfa";
+    if (rank >= 0.2) return "#c4b5fd";
+    return "#ddd6fe";
   }
 
-  // Sequential: light → dark blue
-  if (rank < 0.2) return "#1e3a5f";
-  if (rank < 0.4) return "#1d4ed8";
-  if (rank < 0.6) return "#3b82f6";
-  if (rank < 0.8) return "#60a5fa";
-  return "#93c5fd";
+  // employeeCount - Teal gradient
+  if (rank >= 0.8) return "#0d9488";
+  if (rank >= 0.6) return "#14b8a6";
+  if (rank >= 0.4) return "#5eead4";
+  if (rank >= 0.2) return "#99f6e4";
+  return "#ccfbf1";
 }

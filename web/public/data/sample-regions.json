@@ -577,7 +577,7 @@
   {
     "code": "21010",
     "name": "중구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 1453,
     "employeeCount": 11189,
     "healthScore": 60.6,
@@ -600,7 +600,7 @@
   {
     "code": "21020",
     "name": "서구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 5810,
     "employeeCount": 22482,
     "healthScore": 47.9,
@@ -623,7 +623,7 @@
   {
     "code": "21030",
     "name": "동구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 2659,
     "employeeCount": 14574,
     "healthScore": 65.1,
@@ -646,7 +646,7 @@
   {
     "code": "21040",
     "name": "영도구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 4606,
     "employeeCount": 24212,
     "healthScore": 53.4,
@@ -669,7 +669,7 @@
   {
     "code": "21050",
     "name": "부산진구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 1348,
     "employeeCount": 29378,
     "healthScore": 33.2,
@@ -692,7 +692,7 @@
   {
     "code": "21060",
     "name": "동래구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 1398,
     "employeeCount": 26656,
     "healthScore": 41,
@@ -715,7 +715,7 @@
   {
     "code": "21070",
     "name": "남구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 4199,
     "employeeCount": 10681,
     "healthScore": 58.3,
@@ -738,7 +738,7 @@
   {
     "code": "21080",
     "name": "북구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 2213,
     "employeeCount": 4349,
     "healthScore": 47.5,
@@ -761,7 +761,7 @@
   {
     "code": "21090",
     "name": "해운대구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 4456,
     "employeeCount": 8090,
     "healthScore": 58.1,
@@ -784,7 +784,7 @@
   {
     "code": "21100",
     "name": "사하구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 4880,
     "employeeCount": 22820,
     "healthScore": 73.6,
@@ -807,7 +807,7 @@
   {
     "code": "21110",
     "name": "금정구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 3091,
     "employeeCount": 21777,
     "healthScore": 67.8,
@@ -830,7 +830,7 @@
   {
     "code": "21120",
     "name": "강서구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 4749,
     "employeeCount": 13335,
     "healthScore": 58.6,
@@ -853,7 +853,7 @@
   {
     "code": "21130",
     "name": "연제구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 1917,
     "employeeCount": 13358,
     "healthScore": 60.8,
@@ -876,7 +876,7 @@
   {
     "code": "21140",
     "name": "수영구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 3672,
     "employeeCount": 22656,
     "healthScore": 47.4,
@@ -899,7 +899,7 @@
   {
     "code": "21150",
     "name": "사상구",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 5991,
     "employeeCount": 11207,
     "healthScore": 58.5,
@@ -922,7 +922,7 @@
   {
     "code": "21310",
     "name": "기장군",
-    "province": "기타",
+    "province": "부산광역시",
     "companyCount": 5426,
     "employeeCount": 26080,
     "healthScore": 59.7,
@@ -945,7 +945,7 @@
   {
     "code": "22010",
     "name": "중구",
-    "province": "기타",
+    "province": "대구광역시",
     "companyCount": 4795,
     "employeeCount": 28349,
     "healthScore": 56.2,
@@ -968,7 +968,7 @@
   {
     "code": "22020",
     "name": "동구",
-    "province": "기타",
+    "province": "대구광역시",
     "companyCount": 5800,
     "employeeCount": 19155,
     "healthScore": 31.2,
@@ -991,7 +991,7 @@
   {
     "code": "22030",
     "name": "서구",
-    "province": "기타",
+    "province": "대구광역시",
     "companyCount": 2586,
     "employeeCount": 24740,
     "healthScore": 57.6,
@@ -1014,7 +1014,7 @@
   {
     "code": "22040",
     "name": "남구",
-    "province": "기타",
+    "province": "대구광역시",
     "companyCount": 4480,
     "employeeCount": 16984,
     "healthScore": 45.8,
@@ -1037,7 +1037,7 @@
   {
     "code": "22050",
     "name": "북구",
-    "province": "기타",
+    "province": "대구광역시",
     "companyCount": 1899,
     "employeeCount": 13908,
     "healthScore": 54.9,
@@ -1060,7 +1060,7 @@
   {
     "code": "22060",
     "name": "수성구",
-    "province": "기타",
+    "province": "대구광역시",
     "companyCount": 2618,
     "employeeCount": 26834,
     "healthScore": 46.5,
@@ -1083,7 +1083,7 @@
   {
     "code": "22070",
     "name": "달서구",
-    "province": "기타",
+    "province": "대구광역시",
     "companyCount": 3520,
     "employeeCount": 3908,
     "healthScore": 62.2,
@@ -1106,7 +1106,7 @@
   {
     "code": "22310",
     "name": "달성군",
-    "province": "기타",
+    "province": "대구광역시",
     "companyCount": 1539,
     "employeeCount": 26972,
     "healthScore": 45.1,
@@ -1129,7 +1129,7 @@
   {
     "code": "23010",
     "name": "중구",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 4064,
     "employeeCount": 29596,
     "healthScore": 35.2,
@@ -1152,7 +1152,7 @@
   {
     "code": "23020",
     "name": "동구",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 4503,
     "employeeCount": 28125,
     "healthScore": 38.5,
@@ -1175,7 +1175,7 @@
   {
     "code": "23030",
     "name": "남구",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 1504,
     "employeeCount": 7449,
     "healthScore": 71.6,
@@ -1198,7 +1198,7 @@
   {
     "code": "23040",
     "name": "연수구",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 4168,
     "employeeCount": 20312,
     "healthScore": 70.2,
@@ -1221,7 +1221,7 @@
   {
     "code": "23050",
     "name": "남동구",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 2627,
     "employeeCount": 19090,
     "healthScore": 37.4,
@@ -1244,7 +1244,7 @@
   {
     "code": "23060",
     "name": "부평구",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 3839,
     "employeeCount": 12459,
     "healthScore": 68,
@@ -1267,7 +1267,7 @@
   {
     "code": "23070",
     "name": "계양구",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 626,
     "employeeCount": 7756,
     "healthScore": 31.7,
@@ -1290,7 +1290,7 @@
   {
     "code": "23080",
     "name": "서구",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 788,
     "employeeCount": 17665,
     "healthScore": 68.2,
@@ -1313,7 +1313,7 @@
   {
     "code": "23310",
     "name": "강화군",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 540,
     "employeeCount": 21441,
     "healthScore": 51,
@@ -1336,7 +1336,7 @@
   {
     "code": "23320",
     "name": "옹진군",
-    "province": "기타",
+    "province": "인천광역시",
     "companyCount": 3483,
     "employeeCount": 5457,
     "healthScore": 50.4,
@@ -1359,7 +1359,7 @@
   {
     "code": "24010",
     "name": "동구",
-    "province": "기타",
+    "province": "광주광역시",
     "companyCount": 1788,
     "employeeCount": 10619,
     "healthScore": 57.5,
@@ -1382,7 +1382,7 @@
   {
     "code": "24020",
     "name": "서구",
-    "province": "기타",
+    "province": "광주광역시",
     "companyCount": 3167,
     "employeeCount": 12985,
     "healthScore": 72.4,
@@ -1405,7 +1405,7 @@
   {
     "code": "24030",
     "name": "남구",
-    "province": "기타",
+    "province": "광주광역시",
     "companyCount": 625,
     "employeeCount": 22028,
     "healthScore": 60.5,
@@ -1428,7 +1428,7 @@
   {
     "code": "24040",
     "name": "북구",
-    "province": "기타",
+    "province": "광주광역시",
     "companyCount": 2731,
     "employeeCount": 29524,
     "healthScore": 34.5,
@@ -1451,7 +1451,7 @@
   {
     "code": "24050",
     "name": "광산구",
-    "province": "기타",
+    "province": "광주광역시",
     "companyCount": 2016,
     "employeeCount": 6933,
     "healthScore": 40.1,
@@ -1474,7 +1474,7 @@
   {
     "code": "25010",
     "name": "동구",
-    "province": "기타",
+    "province": "대전광역시",
     "companyCount": 3579,
     "employeeCount": 23837,
     "healthScore": 39.5,
@@ -1497,7 +1497,7 @@
   {
     "code": "25020",
     "name": "중구",
-    "province": "기타",
+    "province": "대전광역시",
     "companyCount": 3836,
     "employeeCount": 8975,
     "healthScore": 71.4,
@@ -1520,7 +1520,7 @@
   {
     "code": "25030",
     "name": "서구",
-    "province": "기타",
+    "province": "대전광역시",
     "companyCount": 964,
     "employeeCount": 11024,
     "healthScore": 72.2,
@@ -1543,7 +1543,7 @@
   {
     "code": "25040",
     "name": "유성구",
-    "province": "기타",
+    "province": "대전광역시",
     "companyCount": 2823,
     "employeeCount": 27370,
     "healthScore": 39.3,
@@ -1566,7 +1566,7 @@
   {
     "code": "25050",
     "name": "대덕구",
-    "province": "기타",
+    "province": "대전광역시",
     "companyCount": 4571,
     "employeeCount": 18814,
     "healthScore": 42.1,
@@ -1589,7 +1589,7 @@
   {
     "code": "26010",
     "name": "중구",
-    "province": "부산광역시",
+    "province": "울산광역시",
     "companyCount": 3158,
     "employeeCount": 18301,
     "healthScore": 61.3,
@@ -1612,7 +1612,7 @@
   {
     "code": "26020",
     "name": "남구",
-    "province": "부산광역시",
+    "province": "울산광역시",
     "companyCount": 4460,
     "employeeCount": 27806,
     "healthScore": 77.6,
@@ -1635,7 +1635,7 @@
   {
     "code": "26030",
     "name": "동구",
-    "province": "부산광역시",
+    "province": "울산광역시",
     "companyCount": 5228,
     "employeeCount": 55993,
     "healthScore": 61.6,
@@ -1658,7 +1658,7 @@
   {
     "code": "26040",
     "name": "북구",
-    "province": "부산광역시",
+    "province": "울산광역시",
     "companyCount": 10675,
     "employeeCount": 36615,
     "healthScore": 62,
@@ -1681,7 +1681,7 @@
   {
     "code": "26310",
     "name": "울주군",
-    "province": "부산광역시",
+    "province": "울산광역시",
     "companyCount": 10249,
     "employeeCount": 46179,
     "healthScore": 56.9,
@@ -1704,7 +1704,7 @@
   {
     "code": "29010",
     "name": "세종시",
-    "province": "광주광역시",
+    "province": "세종특별자치시",
     "companyCount": 7183,
     "employeeCount": 41323,
     "healthScore": 84.2,
@@ -1727,7 +1727,7 @@
   {
     "code": "31011",
     "name": "수원시장안구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 10484,
     "employeeCount": 65772,
     "healthScore": 71,
@@ -1750,7 +1750,7 @@
   {
     "code": "31012",
     "name": "수원시권선구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 2434,
     "employeeCount": 10307,
     "healthScore": 49.5,
@@ -1773,7 +1773,7 @@
   {
     "code": "31013",
     "name": "수원시팔달구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 11358,
     "employeeCount": 22493,
     "healthScore": 63.5,
@@ -1796,7 +1796,7 @@
   {
     "code": "31014",
     "name": "수원시영통구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 5112,
     "employeeCount": 24231,
     "healthScore": 62.1,
@@ -1819,7 +1819,7 @@
   {
     "code": "31021",
     "name": "성남시수정구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 4619,
     "employeeCount": 49888,
     "healthScore": 50.3,
@@ -1842,7 +1842,7 @@
   {
     "code": "31022",
     "name": "성남시중원구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 2771,
     "employeeCount": 28763,
     "healthScore": 75.6,
@@ -1865,7 +1865,7 @@
   {
     "code": "31023",
     "name": "성남시분당구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 10180,
     "employeeCount": 50363,
     "healthScore": 54.8,
@@ -1888,7 +1888,7 @@
   {
     "code": "31030",
     "name": "의정부시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 3479,
     "employeeCount": 51452,
     "healthScore": 63.3,
@@ -1911,7 +1911,7 @@
   {
     "code": "31041",
     "name": "안양시만안구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 6944,
     "employeeCount": 69937,
     "healthScore": 58.8,
@@ -1934,7 +1934,7 @@
   {
     "code": "31042",
     "name": "안양시동안구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 9529,
     "employeeCount": 58544,
     "healthScore": 78.7,
@@ -1957,7 +1957,7 @@
   {
     "code": "31050",
     "name": "부천시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 10037,
     "employeeCount": 48247,
     "healthScore": 64.6,
@@ -1980,7 +1980,7 @@
   {
     "code": "31060",
     "name": "광명시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 5456,
     "employeeCount": 30637,
     "healthScore": 83,
@@ -2003,7 +2003,7 @@
   {
     "code": "31070",
     "name": "평택시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 4199,
     "employeeCount": 51554,
     "healthScore": 78.8,
@@ -2026,7 +2026,7 @@
   {
     "code": "31080",
     "name": "동두천시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 3601,
     "employeeCount": 63175,
     "healthScore": 52.9,
@@ -2049,7 +2049,7 @@
   {
     "code": "31091",
     "name": "안산시상록구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 5270,
     "employeeCount": 54055,
     "healthScore": 68.3,
@@ -2072,7 +2072,7 @@
   {
     "code": "31092",
     "name": "안산시단원구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 11474,
     "employeeCount": 44890,
     "healthScore": 51.8,
@@ -2095,7 +2095,7 @@
   {
     "code": "31101",
     "name": "고양시덕양구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 6887,
     "employeeCount": 13244,
     "healthScore": 77.5,
@@ -2118,7 +2118,7 @@
   {
     "code": "31103",
     "name": "고양시일산동구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 10243,
     "employeeCount": 25682,
     "healthScore": 75.6,
@@ -2141,7 +2141,7 @@
   {
     "code": "31104",
     "name": "고양시일산서구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 9472,
     "employeeCount": 38666,
     "healthScore": 74.7,
@@ -2164,7 +2164,7 @@
   {
     "code": "31110",
     "name": "과천시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 10405,
     "employeeCount": 41819,
     "healthScore": 82.7,
@@ -2187,7 +2187,7 @@
   {
     "code": "31120",
     "name": "구리시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 10533,
     "employeeCount": 24192,
     "healthScore": 59.9,
@@ -2210,7 +2210,7 @@
   {
     "code": "31130",
     "name": "남양주시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 10690,
     "employeeCount": 14055,
     "healthScore": 47.3,
@@ -2233,7 +2233,7 @@
   {
     "code": "31140",
     "name": "오산시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 8571,
     "employeeCount": 21109,
     "healthScore": 45.1,
@@ -2256,7 +2256,7 @@
   {
     "code": "31150",
     "name": "시흥시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 5020,
     "employeeCount": 67848,
     "healthScore": 83.5,
@@ -2279,7 +2279,7 @@
   {
     "code": "31160",
     "name": "군포시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 5858,
     "employeeCount": 55164,
     "healthScore": 52.3,
@@ -2302,7 +2302,7 @@
   {
     "code": "31170",
     "name": "의왕시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 4388,
     "employeeCount": 25349,
     "healthScore": 66.3,
@@ -2325,7 +2325,7 @@
   {
     "code": "31180",
     "name": "하남시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 6885,
     "employeeCount": 11102,
     "healthScore": 81.6,
@@ -2348,7 +2348,7 @@
   {
     "code": "31191",
     "name": "용인시처인구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 2960,
     "employeeCount": 46511,
     "healthScore": 61.5,
@@ -2371,7 +2371,7 @@
   {
     "code": "31192",
     "name": "용인시기흥구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 9017,
     "employeeCount": 47016,
     "healthScore": 80.6,
@@ -2394,7 +2394,7 @@
   {
     "code": "31193",
     "name": "용인시수지구",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 5233,
     "employeeCount": 55539,
     "healthScore": 56.2,
@@ -2417,7 +2417,7 @@
   {
     "code": "31200",
     "name": "파주시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 3520,
     "employeeCount": 53002,
     "healthScore": 68.1,
@@ -2440,7 +2440,7 @@
   {
     "code": "31210",
     "name": "이천시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 4749,
     "employeeCount": 69585,
     "healthScore": 70.8,
@@ -2463,7 +2463,7 @@
   {
     "code": "31220",
     "name": "안성시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 11314,
     "employeeCount": 15530,
     "healthScore": 52.7,
@@ -2486,7 +2486,7 @@
   {
     "code": "31230",
     "name": "김포시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 3454,
     "employeeCount": 59387,
     "healthScore": 81.3,
@@ -2509,7 +2509,7 @@
   {
     "code": "31240",
     "name": "화성시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 11061,
     "employeeCount": 37635,
     "healthScore": 82,
@@ -2532,7 +2532,7 @@
   {
     "code": "31250",
     "name": "광주시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 11805,
     "employeeCount": 53016,
     "healthScore": 63.2,
@@ -2555,7 +2555,7 @@
   {
     "code": "31260",
     "name": "양주시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 7808,
     "employeeCount": 48529,
     "healthScore": 71.7,
@@ -2578,7 +2578,7 @@
   {
     "code": "31270",
     "name": "포천시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 10573,
     "employeeCount": 47012,
     "healthScore": 65.8,
@@ -2601,7 +2601,7 @@
   {
     "code": "31280",
     "name": "여주시",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 2368,
     "employeeCount": 10169,
     "healthScore": 62,
@@ -2624,7 +2624,7 @@
   {
     "code": "31350",
     "name": "연천군",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 4656,
     "employeeCount": 62216,
     "healthScore": 68,
@@ -2647,7 +2647,7 @@
   {
     "code": "31370",
     "name": "가평군",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 9693,
     "employeeCount": 44629,
     "healthScore": 46.6,
@@ -2670,7 +2670,7 @@
   {
     "code": "31380",
     "name": "양평군",
-    "province": "울산광역시",
+    "province": "경기도",
     "companyCount": 9474,
     "employeeCount": 46074,
     "healthScore": 82.9,
@@ -2693,7 +2693,7 @@
   {
     "code": "32010",
     "name": "춘천시",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 692,
     "employeeCount": 17817,
     "healthScore": 41.6,
@@ -2716,7 +2716,7 @@
   {
     "code": "32020",
     "name": "원주시",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 539,
     "employeeCount": 6941,
     "healthScore": 42.1,
@@ -2739,7 +2739,7 @@
   {
     "code": "32030",
     "name": "강릉시",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 5688,
     "employeeCount": 16686,
     "healthScore": 34.6,
@@ -2762,7 +2762,7 @@
   {
     "code": "32040",
     "name": "동해시",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 2738,
     "employeeCount": 4954,
     "healthScore": 35.4,
@@ -2785,7 +2785,7 @@
   {
     "code": "32050",
     "name": "태백시",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 5178,
     "employeeCount": 17047,
     "healthScore": 65.2,
@@ -2808,7 +2808,7 @@
   {
     "code": "32060",
     "name": "속초시",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 1682,
     "employeeCount": 17118,
     "healthScore": 62,
@@ -2831,7 +2831,7 @@
   {
     "code": "32070",
     "name": "삼척시",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 5103,
     "employeeCount": 14637,
     "healthScore": 43.5,
@@ -2854,7 +2854,7 @@
   {
     "code": "32310",
     "name": "홍천군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 5608,
     "employeeCount": 25857,
     "healthScore": 60.3,
@@ -2877,7 +2877,7 @@
   {
     "code": "32320",
     "name": "횡성군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 4814,
     "employeeCount": 22708,
     "healthScore": 55.4,
@@ -2900,7 +2900,7 @@
   {
     "code": "32330",
     "name": "영월군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 5556,
     "employeeCount": 9596,
     "healthScore": 71.3,
@@ -2923,7 +2923,7 @@
   {
     "code": "32340",
     "name": "평창군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 4110,
     "employeeCount": 28336,
     "healthScore": 70,
@@ -2946,7 +2946,7 @@
   {
     "code": "32350",
     "name": "정선군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 972,
     "employeeCount": 14771,
     "healthScore": 34.3,
@@ -2969,7 +2969,7 @@
   {
     "code": "32360",
     "name": "철원군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 826,
     "employeeCount": 3680,
     "healthScore": 64,
@@ -2992,7 +2992,7 @@
   {
     "code": "32370",
     "name": "화천군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 3408,
     "employeeCount": 4426,
     "healthScore": 50.4,
@@ -3015,7 +3015,7 @@
   {
     "code": "32380",
     "name": "양구군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 4155,
     "employeeCount": 18546,
     "healthScore": 58,
@@ -3038,7 +3038,7 @@
   {
     "code": "32390",
     "name": "인제군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 4691,
     "employeeCount": 7003,
     "healthScore": 52.1,
@@ -3061,7 +3061,7 @@
   {
     "code": "32400",
     "name": "고성군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 2719,
     "employeeCount": 22260,
     "healthScore": 74.2,
@@ -3084,7 +3084,7 @@
   {
     "code": "32410",
     "name": "양양군",
-    "province": "기타",
+    "province": "강원특별자치도",
     "companyCount": 1070,
     "employeeCount": 12419,
     "healthScore": 71.2,
@@ -3107,7 +3107,7 @@
   {
     "code": "33020",
     "name": "충주시",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 1436,
     "employeeCount": 26068,
     "healthScore": 47.4,
@@ -3130,7 +3130,7 @@
   {
     "code": "33030",
     "name": "제천시",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 4125,
     "employeeCount": 4681,
     "healthScore": 46.2,
@@ -3153,7 +3153,7 @@
   {
     "code": "33041",
     "name": "청주시상당구",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 1176,
     "employeeCount": 19043,
     "healthScore": 34.8,
@@ -3176,7 +3176,7 @@
   {
     "code": "33042",
     "name": "청주시서원구",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 884,
     "employeeCount": 15505,
     "healthScore": 49,
@@ -3199,7 +3199,7 @@
   {
     "code": "33043",
     "name": "청주시흥덕구",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 2914,
     "employeeCount": 24754,
     "healthScore": 36.4,
@@ -3222,7 +3222,7 @@
   {
     "code": "33044",
     "name": "청주시청원구",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 4150,
     "employeeCount": 12937,
     "healthScore": 74.2,
@@ -3245,7 +3245,7 @@
   {
     "code": "33320",
     "name": "보은군",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 1966,
     "employeeCount": 7996,
     "healthScore": 36.1,
@@ -3268,7 +3268,7 @@
   {
     "code": "33330",
     "name": "옥천군",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 3089,
     "employeeCount": 19329,
     "healthScore": 65.2,
@@ -3291,7 +3291,7 @@
   {
     "code": "33340",
     "name": "영동군",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 458,
     "employeeCount": 9177,
     "healthScore": 37.8,
@@ -3314,7 +3314,7 @@
   {
     "code": "33350",
     "name": "진천군",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 5848,
     "employeeCount": 14396,
     "healthScore": 66.9,
@@ -3337,7 +3337,7 @@
   {
     "code": "33360",
     "name": "괴산군",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 3503,
     "employeeCount": 28817,
     "healthScore": 62.8,
@@ -3360,7 +3360,7 @@
   {
     "code": "33370",
     "name": "음성군",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 3353,
     "employeeCount": 19718,
     "healthScore": 69.4,
@@ -3383,7 +3383,7 @@
   {
     "code": "33380",
     "name": "단양군",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 883,
     "employeeCount": 6730,
     "healthScore": 39.6,
@@ -3406,7 +3406,7 @@
   {
     "code": "33390",
     "name": "증평군",
-    "province": "기타",
+    "province": "충청북도",
     "companyCount": 3794,
     "employeeCount": 8319,
     "healthScore": 47.7,
@@ -3429,7 +3429,7 @@
   {
     "code": "34011",
     "name": "천안시동남구",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 5411,
     "employeeCount": 4729,
     "healthScore": 56.1,
@@ -3452,7 +3452,7 @@
   {
     "code": "34012",
     "name": "천안시서북구",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 2262,
     "employeeCount": 28150,
     "healthScore": 34.4,
@@ -3475,7 +3475,7 @@
   {
     "code": "34020",
     "name": "공주시",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 5717,
     "employeeCount": 19692,
     "healthScore": 50.2,
@@ -3498,7 +3498,7 @@
   {
     "code": "34030",
     "name": "보령시",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 3576,
     "employeeCount": 11541,
     "healthScore": 66.1,
@@ -3521,7 +3521,7 @@
   {
     "code": "34040",
     "name": "아산시",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 756,
     "employeeCount": 27065,
     "healthScore": 30.6,
@@ -3544,7 +3544,7 @@
   {
     "code": "34050",
     "name": "서산시",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 3398,
     "employeeCount": 25351,
     "healthScore": 40.7,
@@ -3567,7 +3567,7 @@
   {
     "code": "34060",
     "name": "논산시",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 609,
     "employeeCount": 12784,
     "healthScore": 48.3,
@@ -3590,7 +3590,7 @@
   {
     "code": "34070",
     "name": "계룡시",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 2825,
     "employeeCount": 11266,
     "healthScore": 37.8,
@@ -3613,7 +3613,7 @@
   {
     "code": "34080",
     "name": "당진시",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 1293,
     "employeeCount": 21891,
     "healthScore": 60.4,
@@ -3636,7 +3636,7 @@
   {
     "code": "34310",
     "name": "금산군",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 2612,
     "employeeCount": 4082,
     "healthScore": 72.4,
@@ -3659,7 +3659,7 @@
   {
     "code": "34330",
     "name": "부여군",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 5129,
     "employeeCount": 11254,
     "healthScore": 54,
@@ -3682,7 +3682,7 @@
   {
     "code": "34340",
     "name": "서천군",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 3071,
     "employeeCount": 15174,
     "healthScore": 50.1,
@@ -3705,7 +3705,7 @@
   {
     "code": "34350",
     "name": "청양군",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 5341,
     "employeeCount": 19266,
     "healthScore": 58.1,
@@ -3728,7 +3728,7 @@
   {
     "code": "34360",
     "name": "홍성군",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 4434,
     "employeeCount": 8751,
     "healthScore": 49.1,
@@ -3751,7 +3751,7 @@
   {
     "code": "34370",
     "name": "예산군",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 5804,
     "employeeCount": 21397,
     "healthScore": 31.3,
@@ -3774,7 +3774,7 @@
   {
     "code": "34380",
     "name": "태안군",
-    "province": "기타",
+    "province": "충청남도",
     "companyCount": 5197,
     "employeeCount": 3102,
     "healthScore": 51.1,
@@ -3797,7 +3797,7 @@
   {
     "code": "35011",
     "name": "전주시완산구",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 994,
     "employeeCount": 2678,
     "healthScore": 31.5,
@@ -3820,7 +3820,7 @@
   {
     "code": "35012",
     "name": "전주시덕진구",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 1150,
     "employeeCount": 8422,
     "healthScore": 72.8,
@@ -3843,7 +3843,7 @@
   {
     "code": "35020",
     "name": "군산시",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 623,
     "employeeCount": 3748,
     "healthScore": 61.4,
@@ -3866,7 +3866,7 @@
   {
     "code": "35030",
     "name": "익산시",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 873,
     "employeeCount": 26557,
     "healthScore": 68.8,
@@ -3889,7 +3889,7 @@
   {
     "code": "35040",
     "name": "정읍시",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 4080,
     "employeeCount": 26931,
     "healthScore": 57.1,
@@ -3912,7 +3912,7 @@
   {
     "code": "35050",
     "name": "남원시",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 1411,
     "employeeCount": 4737,
     "healthScore": 48.7,
@@ -3935,7 +3935,7 @@
   {
     "code": "35060",
     "name": "김제시",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 5013,
     "employeeCount": 12390,
     "healthScore": 72.1,
@@ -3958,7 +3958,7 @@
   {
     "code": "35310",
     "name": "완주군",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 3416,
     "employeeCount": 9574,
     "healthScore": 37.2,
@@ -3981,7 +3981,7 @@
   {
     "code": "35320",
     "name": "진안군",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 4447,
     "employeeCount": 19337,
     "healthScore": 63.4,
@@ -4004,7 +4004,7 @@
   {
     "code": "35330",
     "name": "무주군",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 4186,
     "employeeCount": 11328,
     "healthScore": 43.1,
@@ -4027,7 +4027,7 @@
   {
     "code": "35340",
     "name": "장수군",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 3604,
     "employeeCount": 25023,
     "healthScore": 42.1,
@@ -4050,7 +4050,7 @@
   {
     "code": "35350",
     "name": "임실군",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 3058,
     "employeeCount": 20888,
     "healthScore": 39.8,
@@ -4073,7 +4073,7 @@
   {
     "code": "35360",
     "name": "순창군",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 3506,
     "employeeCount": 26338,
     "healthScore": 62.8,
@@ -4096,7 +4096,7 @@
   {
     "code": "35370",
     "name": "고창군",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 1206,
     "employeeCount": 13875,
     "healthScore": 64.4,
@@ -4119,7 +4119,7 @@
   {
     "code": "35380",
     "name": "부안군",
-    "province": "기타",
+    "province": "전북특별자치도",
     "companyCount": 3272,
     "employeeCount": 24792,
     "healthScore": 66.4,
@@ -4142,7 +4142,7 @@
   {
     "code": "36010",
     "name": "목포시",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 3810,
     "employeeCount": 24198,
     "healthScore": 88,
@@ -4165,7 +4165,7 @@
   {
     "code": "36020",
     "name": "여수시",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 6415,
     "employeeCount": 39230,
     "healthScore": 75.5,
@@ -4188,7 +4188,7 @@
   {
     "code": "36030",
     "name": "순천시",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 4625,
     "employeeCount": 17291,
     "healthScore": 81.4,
@@ -4211,7 +4211,7 @@
   {
     "code": "36040",
     "name": "나주시",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 7340,
     "employeeCount": 38916,
     "healthScore": 86.7,
@@ -4234,7 +4234,7 @@
   {
     "code": "36060",
     "name": "광양시",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 5058,
     "employeeCount": 19479,
     "healthScore": 75.4,
@@ -4257,7 +4257,7 @@
   {
     "code": "36310",
     "name": "담양군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 5175,
     "employeeCount": 32130,
     "healthScore": 73.1,
@@ -4280,7 +4280,7 @@
   {
     "code": "36320",
     "name": "곡성군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 7788,
     "employeeCount": 25184,
     "healthScore": 79,
@@ -4303,7 +4303,7 @@
   {
     "code": "36330",
     "name": "구례군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 7314,
     "employeeCount": 38173,
     "healthScore": 79,
@@ -4326,7 +4326,7 @@
   {
     "code": "36350",
     "name": "고흥군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 7016,
     "employeeCount": 19680,
     "healthScore": 81.7,
@@ -4349,7 +4349,7 @@
   {
     "code": "36360",
     "name": "보성군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 4538,
     "employeeCount": 28248,
     "healthScore": 80.1,
@@ -4372,7 +4372,7 @@
   {
     "code": "36370",
     "name": "화순군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 5600,
     "employeeCount": 30988,
     "healthScore": 73.1,
@@ -4395,7 +4395,7 @@
   {
     "code": "36380",
     "name": "장흥군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 5865,
     "employeeCount": 32301,
     "healthScore": 89.4,
@@ -4418,7 +4418,7 @@
   {
     "code": "36390",
     "name": "강진군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 7180,
     "employeeCount": 19590,
     "healthScore": 72.9,
@@ -4441,7 +4441,7 @@
   {
     "code": "36400",
     "name": "해남군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 5551,
     "employeeCount": 30218,
     "healthScore": 77.2,
@@ -4464,7 +4464,7 @@
   {
     "code": "36410",
     "name": "영암군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 5223,
     "employeeCount": 32621,
     "healthScore": 76.8,
@@ -4487,7 +4487,7 @@
   {
     "code": "36420",
     "name": "무안군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 6364,
     "employeeCount": 29584,
     "healthScore": 82.3,
@@ -4510,7 +4510,7 @@
   {
     "code": "36430",
     "name": "함평군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 3245,
     "employeeCount": 24532,
     "healthScore": 80.3,
@@ -4533,7 +4533,7 @@
   {
     "code": "36440",
     "name": "영광군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 3257,
     "employeeCount": 24379,
     "healthScore": 75.8,
@@ -4556,7 +4556,7 @@
   {
     "code": "36450",
     "name": "장성군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 4284,
     "employeeCount": 15775,
     "healthScore": 72.3,
@@ -4579,7 +4579,7 @@
   {
     "code": "36460",
     "name": "완도군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 5359,
     "employeeCount": 17423,
     "healthScore": 80.4,
@@ -4602,7 +4602,7 @@
   {
     "code": "36470",
     "name": "진도군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 5636,
     "employeeCount": 33799,
     "healthScore": 85.5,
@@ -4625,7 +4625,7 @@
   {
     "code": "36480",
     "name": "신안군",
-    "province": "세종특별자치시",
+    "province": "전라남도",
     "companyCount": 3795,
     "employeeCount": 16188,
     "healthScore": 85.6,
@@ -4648,7 +4648,7 @@
   {
     "code": "37011",
     "name": "포항시남구",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 4644,
     "employeeCount": 2052,
     "healthScore": 59.3,
@@ -4671,7 +4671,7 @@
   {
     "code": "37012",
     "name": "포항시북구",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 4083,
     "employeeCount": 9136,
     "healthScore": 53.1,
@@ -4694,7 +4694,7 @@
   {
     "code": "37020",
     "name": "경주시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 2394,
     "employeeCount": 15169,
     "healthScore": 53.7,
@@ -4717,7 +4717,7 @@
   {
     "code": "37030",
     "name": "김천시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 3989,
     "employeeCount": 9045,
     "healthScore": 59.2,
@@ -4740,7 +4740,7 @@
   {
     "code": "37040",
     "name": "안동시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 1253,
     "employeeCount": 27957,
     "healthScore": 52.4,
@@ -4763,7 +4763,7 @@
   {
     "code": "37050",
     "name": "구미시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 1511,
     "employeeCount": 16154,
     "healthScore": 60,
@@ -4786,7 +4786,7 @@
   {
     "code": "37060",
     "name": "영주시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 3309,
     "employeeCount": 17888,
     "healthScore": 62.6,
@@ -4809,7 +4809,7 @@
   {
     "code": "37070",
     "name": "영천시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 5406,
     "employeeCount": 25146,
     "healthScore": 74.8,
@@ -4832,7 +4832,7 @@
   {
     "code": "37080",
     "name": "상주시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 810,
     "employeeCount": 26822,
     "healthScore": 45.1,
@@ -4855,7 +4855,7 @@
   {
     "code": "37090",
     "name": "문경시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 514,
     "employeeCount": 9027,
     "healthScore": 44,
@@ -4878,7 +4878,7 @@
   {
     "code": "37100",
     "name": "경산시",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 5702,
     "employeeCount": 15213,
     "healthScore": 46.9,
@@ -4901,7 +4901,7 @@
   {
     "code": "37310",
     "name": "군위군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 2883,
     "employeeCount": 27566,
     "healthScore": 63.9,
@@ -4924,7 +4924,7 @@
   {
     "code": "37320",
     "name": "의성군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 1840,
     "employeeCount": 4664,
     "healthScore": 44.1,
@@ -4947,7 +4947,7 @@
   {
     "code": "37330",
     "name": "청송군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 677,
     "employeeCount": 4492,
     "healthScore": 35.1,
@@ -4970,7 +4970,7 @@
   {
     "code": "37340",
     "name": "영양군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 5067,
     "employeeCount": 26908,
     "healthScore": 33.3,
@@ -4993,7 +4993,7 @@
   {
     "code": "37350",
     "name": "영덕군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 1968,
     "employeeCount": 6646,
     "healthScore": 74.6,
@@ -5016,7 +5016,7 @@
   {
     "code": "37360",
     "name": "청도군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 5387,
     "employeeCount": 10470,
     "healthScore": 34.5,
@@ -5039,7 +5039,7 @@
   {
     "code": "37370",
     "name": "고령군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 2540,
     "employeeCount": 16251,
     "healthScore": 74.4,
@@ -5062,7 +5062,7 @@
   {
     "code": "37380",
     "name": "성주군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 587,
     "employeeCount": 27711,
     "healthScore": 73.5,
@@ -5085,7 +5085,7 @@
   {
     "code": "37390",
     "name": "칠곡군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 4479,
     "employeeCount": 17430,
     "healthScore": 35.4,
@@ -5108,7 +5108,7 @@
   {
     "code": "37400",
     "name": "예천군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 4229,
     "employeeCount": 5731,
     "healthScore": 63.1,
@@ -5131,7 +5131,7 @@
   {
     "code": "37410",
     "name": "봉화군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 1207,
     "employeeCount": 11893,
     "healthScore": 40.1,
@@ -5154,7 +5154,7 @@
   {
     "code": "37420",
     "name": "울진군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 1486,
     "employeeCount": 6217,
     "healthScore": 49.5,
@@ -5177,7 +5177,7 @@
   {
     "code": "37430",
     "name": "울릉군",
-    "province": "기타",
+    "province": "경상북도",
     "companyCount": 1813,
     "employeeCount": 24911,
     "healthScore": 32.1,
@@ -5200,7 +5200,7 @@
   {
     "code": "38030",
     "name": "진주시",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 3973,
     "employeeCount": 24236,
     "healthScore": 74.7,
@@ -5223,7 +5223,7 @@
   {
     "code": "38050",
     "name": "통영시",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 5443,
     "employeeCount": 11301,
     "healthScore": 43.8,
@@ -5246,7 +5246,7 @@
   {
     "code": "38060",
     "name": "사천시",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 3716,
     "employeeCount": 13328,
     "healthScore": 64.9,
@@ -5269,7 +5269,7 @@
   {
     "code": "38070",
     "name": "김해시",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 2603,
     "employeeCount": 11110,
     "healthScore": 37.6,
@@ -5292,7 +5292,7 @@
   {
     "code": "38080",
     "name": "밀양시",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 4965,
     "employeeCount": 9491,
     "healthScore": 57.8,
@@ -5315,7 +5315,7 @@
   {
     "code": "38090",
     "name": "거제시",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 4237,
     "employeeCount": 24164,
     "healthScore": 70.5,
@@ -5338,7 +5338,7 @@
   {
     "code": "38100",
     "name": "양산시",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 4104,
     "employeeCount": 18331,
     "healthScore": 60.1,
@@ -5361,7 +5361,7 @@
   {
     "code": "38111",
     "name": "창원시의창구",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 4323,
     "employeeCount": 27877,
     "healthScore": 50.4,
@@ -5384,7 +5384,7 @@
   {
     "code": "38112",
     "name": "창원시성산구",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 3003,
     "employeeCount": 28019,
     "healthScore": 46.6,
@@ -5407,7 +5407,7 @@
   {
     "code": "38113",
     "name": "창원시마산합포구",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 1218,
     "employeeCount": 15922,
     "healthScore": 53.2,
@@ -5430,7 +5430,7 @@
   {
     "code": "38114",
     "name": "창원시마산회원구",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 1790,
     "employeeCount": 15037,
     "healthScore": 40.6,
@@ -5453,7 +5453,7 @@
   {
     "code": "38115",
     "name": "창원시진해구",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 2131,
     "employeeCount": 27926,
     "healthScore": 34.6,
@@ -5476,7 +5476,7 @@
   {
     "code": "38310",
     "name": "의령군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 3780,
     "employeeCount": 2518,
     "healthScore": 31.3,
@@ -5499,7 +5499,7 @@
   {
     "code": "38320",
     "name": "함안군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 3684,
     "employeeCount": 18256,
     "healthScore": 70.9,
@@ -5522,7 +5522,7 @@
   {
     "code": "38330",
     "name": "창녕군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 2426,
     "employeeCount": 20531,
     "healthScore": 68.6,
@@ -5545,7 +5545,7 @@
   {
     "code": "38340",
     "name": "고성군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 4081,
     "employeeCount": 6924,
     "healthScore": 32.6,
@@ -5568,7 +5568,7 @@
   {
     "code": "38350",
     "name": "남해군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 2715,
     "employeeCount": 6699,
     "healthScore": 51.9,
@@ -5591,7 +5591,7 @@
   {
     "code": "38360",
     "name": "하동군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 2987,
     "employeeCount": 15133,
     "healthScore": 66.3,
@@ -5614,7 +5614,7 @@
   {
     "code": "38370",
     "name": "산청군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 474,
     "employeeCount": 20795,
     "healthScore": 58.7,
@@ -5637,7 +5637,7 @@
   {
     "code": "38380",
     "name": "함양군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 3955,
     "employeeCount": 23521,
     "healthScore": 65,
@@ -5660,7 +5660,7 @@
   {
     "code": "38390",
     "name": "거창군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 2777,
     "employeeCount": 16226,
     "healthScore": 40.8,
@@ -5683,7 +5683,7 @@
   {
     "code": "38400",
     "name": "합천군",
-    "province": "기타",
+    "province": "경상남도",
     "companyCount": 1387,
     "employeeCount": 5397,
     "healthScore": 41.5,

@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, useImperativeHandle, forwardRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { RegionData } from "@/lib/types";
 import {
   KOREA_CENTER,
-  getHealthColor,
   getLayerColor,
   getBasemapTiles,
   MapLayerType,
@@ -22,24 +21,64 @@ interface KoreaMapProps {
   basemapStyle: BasemapStyle;
 }
 
-export default function KoreaMap({
-  regions,
-  geojson,
-  selectedRegion,
-  onRegionSelect,
-  activeLayer,
-  basemapStyle,
-}: KoreaMapProps) {
+export interface KoreaMapHandle {
+  flyToRegion: (code: string) => void;
+}
+
+const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
+  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, basemapStyle },
+  ref
+) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const popup = useRef<maplibregl.Popup | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const geojsonRef = useRef<GeoJSON.FeatureCollection | null>(null);
+
+  // Keep a ref of the latest geojson for flyTo
+  useEffect(() => {
+    geojsonRef.current = geojson;
+  }, [geojson]);
 
   const regionLookup = useCallback(() => {
     const m = new Map<string, RegionData>();
     regions.forEach((r) => m.set(r.code, r));
     return m;
   }, [regions]);
+
+  // Expose flyToRegion method
+  useImperativeHandle(ref, () => ({
+    flyToRegion: (code: string) => {
+      if (!map.current || !geojsonRef.current) return;
+      const feature = geojsonRef.current.features.find(
+        (f) => f.properties?.code === code
+      );
+      if (!feature) return;
+
+      // Calculate centroid from geometry
+      const bounds = new maplibregl.LngLatBounds();
+      const addCoords = (coords: number[] | number[][] | number[][][] | number[][][][]) => {
+        if (typeof coords[0] === "number") {
+          bounds.extend(coords as [number, number]);
+        } else {
+          (coords as number[][]).forEach((c) => addCoords(c));
+        }
+      };
+      const geom = feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
+      if (geom.type === "Polygon") {
+        geom.coordinates.forEach((ring) => addCoords(ring));
+      } else if (geom.type === "MultiPolygon") {
+        geom.coordinates.forEach((poly) => poly.forEach((ring) => addCoords(ring)));
+      }
+
+      const center = bounds.getCenter();
+      map.current.flyTo({
+        center: [center.lng, center.lat],
+        zoom: Math.max(map.current.getZoom(), 9),
+        duration: 800,
+      });
+    },
+  }), []);
 
   // Initialize map
   useEffect(() => {
@@ -97,7 +136,6 @@ export default function KoreaMap({
     const tiles = getBasemapTiles(basemapStyle);
     const source = map.current.getSource("basemap") as maplibregl.RasterTileSource;
     if (source) {
-      // MapLibre doesn't support setTiles directly, recreate
       map.current.removeLayer("basemap-layer");
       map.current.removeSource("basemap");
       map.current.addSource("basemap", {
@@ -106,7 +144,6 @@ export default function KoreaMap({
         tileSize: 256,
         attribution: tiles.attribution,
       });
-      // Add basemap layer before region layers
       const firstLayerId = map.current.getLayer("region-fills") ? "region-fills" : undefined;
       map.current.addLayer(
         { id: "basemap-layer", type: "raster", source: "basemap", minzoom: 0, maxzoom: 19 },
@@ -313,4 +350,6 @@ export default function KoreaMap({
   }, [mapReady, selectedRegion]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
-}
+});
+
+export default KoreaMap;

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { RegionData } from "@/lib/types";
 import { MapLayerType, BasemapStyle } from "@/lib/constants";
+import type { KoreaMapHandle } from "@/components/Map/KoreaMap";
 import RegionRanking from "@/components/Layout/RegionRanking";
 import MapControls from "@/components/Layout/MapControls";
 import Legend from "@/components/Layout/Legend";
 import Sidebar from "@/components/Layout/Sidebar";
+import HelpModal from "@/components/Layout/HelpModal";
 
 const KoreaMap = dynamic(() => import("@/components/Map/KoreaMap"), {
   ssr: false,
@@ -24,8 +26,10 @@ export default function HomePage() {
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeLayer, setActiveLayer] = useState<MapLayerType>("healthScore");
-  const [basemapStyle, setBasemapStyle] = useState<BasemapStyle>("vworld-base");
+  const [basemapStyle, setBasemapStyle] = useState<BasemapStyle>("carto-dark");
   const [provinceFilter, setProvinceFilter] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
+  const mapRef = useRef<KoreaMapHandle>(null);
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -53,6 +57,9 @@ export default function HomePage() {
 
   const handleRegionSelect = useCallback((code: string | null) => {
     setSelectedCode(code);
+    if (code) {
+      mapRef.current?.flyToRegion(code);
+    }
   }, []);
 
   const selectedRegion = useMemo(
@@ -60,7 +67,6 @@ export default function HomePage() {
     [regions, selectedCode]
   );
 
-  // Filter regions shown on map based on province filter
   const displayedRegions = useMemo(() => {
     if (!provinceFilter) return regions;
     return regions.filter((r) => r.code.startsWith(provinceFilter));
@@ -97,6 +103,7 @@ export default function HomePage() {
       {/* Center: Map */}
       <div className="absolute inset-0 left-[320px]" style={{ right: selectedRegion ? 380 : 0 }}>
         <KoreaMap
+          ref={mapRef}
           regions={displayedRegions}
           geojson={geojson}
           selectedRegion={selectedCode}
@@ -112,14 +119,13 @@ export default function HomePage() {
         onLayerChange={setActiveLayer}
         basemapStyle={basemapStyle}
         onBasemapChange={setBasemapStyle}
+        onHelpOpen={() => setShowHelp(true)}
       />
 
       {/* Legend */}
-      {activeLayer === "healthScore" && (
-        <div className="absolute bottom-6 left-[340px] z-10">
-          <Legend />
-        </div>
-      )}
+      <div className="absolute bottom-6 left-[340px] z-10">
+        <Legend activeLayer={activeLayer} />
+      </div>
 
       {/* Right: Detail Sidebar */}
       <Sidebar
@@ -127,6 +133,9 @@ export default function HomePage() {
         allRegions={regions}
         onClose={() => setSelectedCode(null)}
       />
+
+      {/* Help Modal */}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
     </div>
   );
 }

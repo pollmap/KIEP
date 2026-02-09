@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { RegionData } from "@/lib/types";
 import { getHealthColor, PROVINCES, MapLayerType } from "@/lib/constants";
 
@@ -26,6 +26,8 @@ export default function RegionRanking({
   const [sortKey, setSortKey] = useState<SortKey>("healthScore");
   const [sortAsc, setSortAsc] = useState(false);
   const [search, setSearch] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
+  const selectedItemRef = useRef<HTMLButtonElement>(null);
 
   const filtered = useMemo(() => {
     let list = [...regions];
@@ -53,6 +55,13 @@ export default function RegionRanking({
 
     return list;
   }, [regions, provinceFilter, search, sortKey, sortAsc]);
+
+  // Scroll selected item into view when selection changes (e.g. from map click)
+  useEffect(() => {
+    if (selectedCode && selectedItemRef.current) {
+      selectedItemRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [selectedCode]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -152,13 +161,14 @@ export default function RegionRanking({
       </div>
 
       {/* Region List */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={listRef} className="flex-1 overflow-y-auto">
         {filtered.map((r, i) => {
           const val = getValue(r);
           const isSelected = r.code === selectedCode;
           return (
             <button
               key={r.code}
+              ref={isSelected ? selectedItemRef : undefined}
               onClick={() => onSelect(r.code)}
               className={`w-full px-3 py-2 flex items-center text-left transition-colors border-b border-[var(--panel-border)]/50 ${
                 isSelected

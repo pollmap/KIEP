@@ -1,12 +1,19 @@
 "use client";
 
-import { HEALTH_BANDS } from "@/lib/constants";
+import { LAYER_COLOR_BANDS, MAP_LAYERS, MapLayerType } from "@/lib/constants";
 
-export default function Legend() {
+interface LegendProps {
+  activeLayer: MapLayerType;
+}
+
+export default function Legend({ activeLayer }: LegendProps) {
+  const bands = LAYER_COLOR_BANDS[activeLayer];
+  const layerLabel = MAP_LAYERS.find((l) => l.key === activeLayer)?.label ?? "";
+
   return (
     <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg p-3">
-      <div className="text-[10px] text-gray-500 mb-2 font-medium">산업 건강도</div>
-      {HEALTH_BANDS.map((band) => (
+      <div className="text-[10px] text-gray-500 mb-2 font-medium">{layerLabel}</div>
+      {bands.map((band) => (
         <div key={band.label} className="flex items-center gap-2 text-[11px] mb-1">
           <div
             className="w-4 h-2.5 rounded-sm"
