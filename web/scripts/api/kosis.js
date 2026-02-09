@@ -19,40 +19,26 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
  */
 const KOSIS_TABLES = {
   // ── 주민등록인구 (총인구) ──
+  // DT_1B040A3: 행정구역(시군구)별, 성별 인구수
   population: {
     orgId: "101",
     tblId: "DT_1B040A3",
-    itmId: "T2",       // 총인구수
-    objL1: "ALL",      // 시군구 전체
-    objL2: "",
-    prdSe: "Y",
-    fields: { population: { itmFilter: null, parse: "int" } },
-    regionField: "C1_NM",
-  },
-
-  // ── 연령별 인구 (고령화율, 청년비율) ──
-  populationAge: {
-    orgId: "101",
-    tblId: "DT_1B04005N",
     itmId: "ALL",
-    objL1: "ALL",      // 시군구
-    objL2: "ALL",      // 연령
+    objL1: "ALL",      // 행정구역
+    objL2: "0",         // 성별: 0=계 (NOT empty - caused err 21)
     prdSe: "Y",
-    fields: {
-      agingRate: { compute: "aging" },     // 65세이상 / 총인구 * 100
-      youthRatio: { compute: "youth" },    // 15-34세 / 총인구 * 100
-    },
+    fields: { population: { itmNm: "총인구수", parse: "int" } },
     regionField: "C1_NM",
-    special: "ageStructure",
   },
 
   // ── 사업체조사 (사업체수, 종사자수) ──
+  // DT_1K52B01 needs objL2 for industry classification
   business: {
     orgId: "101",
     tblId: "DT_1K52B01",
     itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
+    objL1: "ALL",       // 행정구역
+    objL2: "ALL",       // 산업분류 (was empty - caused err 20)
     prdSe: "Y",
     fields: {
       companyCount: { itmNm: "사업체수", parse: "int" },
@@ -61,21 +47,7 @@ const KOSIS_TABLES = {
     regionField: "C1_NM",
   },
 
-  // ── 지역내총생산 (GRDP) ──
-  grdp: {
-    orgId: "101",
-    tblId: "DT_1C65",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      grdp: { itmNm: "지역내총생산", parse: "float", scale: 0.001 }, // 백만원→십억원
-    },
-    regionField: "C1_NM",
-  },
-
-  // ── 지방재정 (세입, 재정자립도) ──
+  // ── 지방재정 (재정자립도) ── CONFIRMED WORKING
   fiscal: {
     orgId: "101",
     tblId: "DT_1YL20921",
@@ -84,34 +56,18 @@ const KOSIS_TABLES = {
     objL2: "",
     prdSe: "Y",
     fields: {
-      taxRevenue: { itmNm: "지방세", parse: "float" },
       financialIndependence: { itmNm: "재정자립도", parse: "float" },
     },
     regionField: "C1_NM",
   },
 
-  // ── 고용률/실업률 ──
-  employment: {
-    orgId: "101",
-    tblId: "DT_1ES4F01",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      employmentRate: { itmNm: "고용률", parse: "float" },
-      unemploymentRate: { itmNm: "실업률", parse: "float" },
-    },
-    regionField: "C1_NM",
-  },
-
-  // ── 인구동태 (출생률) ──
+  // ── e-지방지표: 인구동태 (출생/사망) ──
   birthDeath: {
     orgId: "101",
     tblId: "DT_1IN1503",
     itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
+    objL1: "ALL",       // 행정구역
+    objL2: "0",          // 성별: 0=계 (was empty - caused err 20)
     prdSe: "Y",
     fields: {
       birthRate: { itmNm: "출생", parse: "float" },
@@ -119,82 +75,38 @@ const KOSIS_TABLES = {
     regionField: "C1_NM",
   },
 
-  // ── 학교/학생 수 ──
-  education: {
-    orgId: "334",
-    tblId: "DT_334N_A1",
+  // ── e-지방지표: 외국인주민 현황 ──
+  foreigner: {
+    orgId: "101",
+    tblId: "DT_1YL20631",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
     fields: {
-      schoolCount: { itmNm: "학교수", parse: "int" },
-      studentCount: { itmNm: "학생수", parse: "int" },
+      foreignRatio: { itmNm: "외국인", parse: "float" },
     },
     regionField: "C1_NM",
   },
 
-  // ── 의료기관 ──
-  healthcare: {
-    orgId: "354",
-    tblId: "DT_354N_AA",
+  // ── e-지방지표: 고령인구비율 ──
+  aging: {
+    orgId: "101",
+    tblId: "DT_1YL20631",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
     fields: {
-      hospitalCount: { itmNm: "의료기관", parse: "int" },
-      doctorCount: { itmNm: "의사", parse: "int" },
+      agingRate: { itmNm: "고령", parse: "float" },
     },
     regionField: "C1_NM",
   },
 
-  // ── 범죄통계 ──
-  crime: {
-    orgId: "132",
-    tblId: "DT_132N_01",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      crimeRate: { itmNm: null, parse: "float" },
-    },
-    regionField: "C1_NM",
-  },
-
-  // ── 교통사고 ──
-  traffic: {
-    orgId: "132",
-    tblId: "DT_132N_04",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      trafficAccidents: { itmNm: null, parse: "int" },
-    },
-    regionField: "C1_NM",
-  },
-
-  // ── 대기질 (미세먼지) ──
-  airQuality: {
-    orgId: "106",
-    tblId: "DT_106N_01",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      airQuality: { itmNm: "미세먼지", parse: "float" },
-    },
-    regionField: "C1_NM",
-  },
-
-  // ── 상하수도 보급률 ──
-  waterInfra: {
-    orgId: "106",
-    tblId: "DT_106N_04",
+  // ── e-지방지표: 상수도보급률 ──
+  waterSupply: {
+    orgId: "101",
+    tblId: "DT_1YL21121",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
@@ -202,6 +114,49 @@ const KOSIS_TABLES = {
     fields: {
       waterSupply: { itmNm: "상수도", parse: "float" },
       sewerageRate: { itmNm: "하수도", parse: "float" },
+    },
+    regionField: "C1_NM",
+  },
+
+  // ── e-지방지표: 도시공원 ──
+  parks: {
+    orgId: "101",
+    tblId: "DT_1YL21141",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: {
+      parkArea: { itmNm: "공원", parse: "float" },
+      greenAreaRatio: { itmNm: "녹지", parse: "float" },
+    },
+    regionField: "C1_NM",
+  },
+
+  // ── e-지방지표: 도로율 ──
+  roads: {
+    orgId: "101",
+    tblId: "DT_1YL21131",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: {
+      roadDensity: { itmNm: "도로", parse: "float" },
+    },
+    regionField: "C1_NM",
+  },
+
+  // ── e-지방지표: 지방세 ──
+  localTax: {
+    orgId: "101",
+    tblId: "DT_1YL20911",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: {
+      taxRevenue: { itmNm: "지방세", parse: "float" },
     },
     regionField: "C1_NM",
   },
@@ -246,14 +201,11 @@ async function fetchKosisTable(tableKey, year) {
     const data = await cachedFetch(url);
 
     if (!Array.isArray(data)) {
-      // KOSIS returns error as object - log full response for debugging
-      const errMsg = data?.err || data?.errMsg || data?.message || data?.result?.message || "";
-      const errCode = data?.errCd || data?.result?.code || "";
-      if (errMsg || errCode) {
-        console.warn(`[kosis:${tableKey}] API error (${errCode}): ${errMsg}`);
+      // KOSIS error responses: {"err":"21","errMsg":"..."}
+      if (data?.err) {
+        console.warn(`[kosis:${tableKey}] API error ${data.err}: ${data.errMsg}`);
       } else {
-        // Dump first 300 chars of response for diagnosis
-        const preview = JSON.stringify(data).substring(0, 300);
+        const preview = JSON.stringify(data).substring(0, 200);
         console.warn(`[kosis:${tableKey}] Non-array response: ${preview}`);
       }
       return new Map();
@@ -404,15 +356,9 @@ const HISTORICAL_FIELD_MAP = {
   population: { tableKey: "population", fieldKey: "population" },
   companyCount: { tableKey: "business", fieldKey: "companyCount" },
   employeeCount: { tableKey: "business", fieldKey: "employeeCount" },
-  grdp: { tableKey: "grdp", fieldKey: "grdp" },
-  taxRevenue: { tableKey: "fiscal", fieldKey: "taxRevenue" },
+  taxRevenue: { tableKey: "localTax", fieldKey: "taxRevenue" },
   financialIndependence: { tableKey: "fiscal", fieldKey: "financialIndependence" },
-  employmentRate: { tableKey: "employment", fieldKey: "employmentRate" },
   birthRate: { tableKey: "birthDeath", fieldKey: "birthRate" },
-  schoolCount: { tableKey: "education", fieldKey: "schoolCount" },
-  hospitalCount: { tableKey: "healthcare", fieldKey: "hospitalCount" },
-  crimeRate: { tableKey: "crime", fieldKey: "crimeRate" },
-  airQuality: { tableKey: "airQuality", fieldKey: "airQuality" },
 };
 
 module.exports = {

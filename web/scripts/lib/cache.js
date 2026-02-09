@@ -78,12 +78,15 @@ async function cachedFetch(url, options = {}) {
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
-      const contentType = res.headers.get("content-type") || "";
+      // Always read as text first, then try JSON.parse.
+      // Many Korean APIs (KOSIS, R-ONE) return JSON with text/html content-type.
+      const text = await res.text();
       let data;
-      if (contentType.includes("xml") || contentType.includes("html")) {
-        data = { _raw: await res.text(), _isXml: true };
-      } else {
-        data = await res.json();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        // Not valid JSON - return as raw text
+        data = { _raw: text, _isXml: true };
       }
       if (useCache) setCache(url, data);
       return data;

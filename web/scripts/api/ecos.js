@@ -100,7 +100,11 @@ async function fetchAllEcosData(year, regionPopulations) {
 
   // Try fetching 지역별 민간소비 (regional private consumption)
   try {
-    const rows = await fetchEcosTable("901Y015", "*", "A", year, year);
+    // Try multiple ECOS stat codes for regional consumption
+    let rows = await fetchEcosTable("901Y015", "*", "A", year, year);
+    if (rows.length === 0) {
+      rows = await fetchEcosTable("200Y004", "*", "A", year, year);
+    }
 
     if (rows.length > 0) {
       const provinceValues = new Map();

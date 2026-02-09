@@ -11,14 +11,11 @@ const { cachedFetch } = require("../lib/cache");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // R-ONE statistical table IDs
+// landPrice A_2024_00900 confirmed working (5359 rows)
 const RONE_TABLES = {
   landPrice: {
-    STATBL_ID: "A_2024_00900",   // 지가변동률 (시군구)
-    fields: { avgLandPrice: "지가", priceChangeRate: "변동률" },
-  },
-  aptPrice: {
-    STATBL_ID: "A_2024_01100",   // 아파트매매가격지수 (시군구)
-    fields: { aptPrice: "매매", aptChangeRate: "변동률" },
+    STATBL_ID: "A_2024_00900",   // 지가변동률 (시군구) - CONFIRMED
+    fields: { priceChangeRate: null },  // null = take any ITM_NM
   },
 };
 
@@ -104,7 +101,7 @@ async function fetchAllRoneData(year) {
 
         const itmNm = row.ITM_NM || "";
         for (const [field, keyword] of Object.entries(table.fields)) {
-          if (itmNm.includes(keyword) || Object.keys(table.fields).length === 1) {
+          if (keyword === null || itmNm.includes(keyword) || Object.keys(table.fields).length === 1) {
             merged.get(code)[field] = value;
             matched++;
           }
