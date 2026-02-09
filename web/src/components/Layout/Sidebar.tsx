@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { RegionData } from "@/lib/types";
-import { getHealthColor, INDUSTRY_LABELS, INDUSTRY_COLORS, HEALTH_BANDS } from "@/lib/constants";
+import { getHealthColor, INDUSTRY_LABELS, INDUSTRY_COLORS, HEALTH_BANDS, PROVINCES } from "@/lib/constants";
 import {
   PieChart,
   Pie,
@@ -43,13 +43,27 @@ export default function Sidebar({ region, allRegions, onClose }: SidebarProps) {
     return sorted.findIndex((r) => r.code === region.code) + 1;
   }, [allRegions, region.code]);
 
-  // Same province regions for comparison
-  const sameProvince = useMemo(() => {
-    return allRegions
-      .filter((r) => r.province === region.province && r.code !== region.code)
-      .sort((a, b) => b.healthScore - a.healthScore)
-      .slice(0, 5);
-  }, [allRegions, region.province, region.code]);
+  // Same province comparison: 1st, middle, last + adjacent regions
+  const provincePrefix = region.code.substring(0, 2);
+  const provinceName = PROVINCES[provincePrefix] || region.province;
+
+  const compareRegions = useMemo(() => {
+    const sameProvList = allRegions
+      .filter((r) => r.code.substring(0, 2) === provincePrefix && r.code !== region.code)
+      .sort((a, b) => b.healthScore - a.healthScore);
+
+    if (sameProvList.length === 0) return [];
+
+    const picks: RegionData[] = [];
+    // 1st place
+    if (sameProvList.length > 0) picks.push(sameProvList[0]);
+    // Middle
+    if (sameProvList.length > 2) picks.push(sameProvList[Math.floor(sameProvList.length / 2)]);
+    // Last place
+    if (sameProvList.length > 1) picks.push(sameProvList[sameProvList.length - 1]);
+
+    return picks;
+  }, [allRegions, provincePrefix, region.code]);
 
   // Health score band
   const band = HEALTH_BANDS.find((b) => region.healthScore >= b.min && region.healthScore <= b.max);
@@ -188,15 +202,15 @@ export default function Sidebar({ region, allRegions, onClose }: SidebarProps) {
       </div>
 
       {/* Same Province Comparison */}
-      {sameProvince.length > 0 && (
+      {compareRegions.length > 0 && (
         <div className="p-4">
-          <div className="text-[10px] text-gray-500 mb-2">{region.province} 내 비교</div>
+          <div className="text-[10px] text-gray-500 mb-2">{provinceName} 내 비교 (1위 / 중간 / 최하위)</div>
           <div className="h-[140px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={[
                   { name: region.name.slice(0, 4), score: region.healthScore, isCurrent: true },
-                  ...sameProvince.map((r) => ({
+                  ...compareRegions.map((r) => ({
                     name: r.name.slice(0, 4),
                     score: r.healthScore,
                     isCurrent: false,
@@ -208,7 +222,7 @@ export default function Sidebar({ region, allRegions, onClose }: SidebarProps) {
                 <XAxis dataKey="name" tick={{ fill: "#666", fontSize: 10 }} />
                 <YAxis domain={[0, 100]} tick={{ fill: "#666", fontSize: 10 }} />
                 <Bar dataKey="score" radius={[3, 3, 0, 0]}>
-                  {[region, ...sameProvince].map((r, i) => (
+                  {[region, ...compareRegions].map((r, i) => (
                     <Cell
                       key={i}
                       fill={i === 0 ? "#3b82f6" : getHealthColor(r.healthScore) + "80"}

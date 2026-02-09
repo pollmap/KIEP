@@ -7,9 +7,8 @@ import { RegionData } from "@/lib/types";
 import {
   KOREA_CENTER,
   getLayerColor,
-  getBasemapTiles,
+  BASEMAP_TILES,
   MapLayerType,
-  BasemapStyle,
 } from "@/lib/constants";
 
 interface KoreaMapProps {
@@ -18,15 +17,16 @@ interface KoreaMapProps {
   selectedRegion: string | null;
   onRegionSelect: (code: string | null) => void;
   activeLayer: MapLayerType;
-  basemapStyle: BasemapStyle;
 }
 
 export interface KoreaMapHandle {
   flyToRegion: (code: string) => void;
+  flyToProvince: (prefix: string) => void;
+  resetView: () => void;
 }
 
 const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
-  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, basemapStyle },
+  { regions, geojson, selectedRegion, onRegionSelect, activeLayer },
   ref
 ) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -35,7 +35,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
   const [mapReady, setMapReady] = useState(false);
   const geojsonRef = useRef<GeoJSON.FeatureCollection | null>(null);
 
-  // Keep a ref of the latest geojson for flyTo
   useEffect(() => {
     geojsonRef.current = geojson;
   }, [geojson]);
@@ -46,7 +45,23 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
     return m;
   }, [regions]);
 
-  // Expose flyToRegion method
+  // Calculate bounds for a set of features
+  const calcBounds = useCallback((features: GeoJSON.Feature[]) => {
+    const bounds = new maplibregl.LngLatBounds();
+    const addCoords = (coords: unknown) => {
+      if (Array.isArray(coords) && typeof coords[0] === "number") {
+        bounds.extend(coords as [number, number]);
+      } else if (Array.isArray(coords)) {
+        coords.forEach((c) => addCoords(c));
+      }
+    };
+    features.forEach((f) => {
+      const geom = f.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
+      addCoords(geom.coordinates);
+    });
+    return bounds;
+  }, []);
+
   useImperativeHandle(ref, () => ({
     flyToRegion: (code: string) => {
       if (!map.current || !geojsonRef.current) return;
@@ -54,23 +69,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         (f) => f.properties?.code === code
       );
       if (!feature) return;
-
-      // Calculate centroid from geometry
-      const bounds = new maplibregl.LngLatBounds();
-      const addCoords = (coords: number[] | number[][] | number[][][] | number[][][][]) => {
-        if (typeof coords[0] === "number") {
-          bounds.extend(coords as [number, number]);
-        } else {
-          (coords as number[][]).forEach((c) => addCoords(c));
-        }
-      };
-      const geom = feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
-      if (geom.type === "Polygon") {
-        geom.coordinates.forEach((ring) => addCoords(ring));
-      } else if (geom.type === "MultiPolygon") {
-        geom.coordinates.forEach((poly) => poly.forEach((ring) => addCoords(ring)));
-      }
-
+      const bounds = calcBounds([feature]);
       const center = bounds.getCenter();
       map.current.flyTo({
         center: [center.lng, center.lat],
@@ -78,13 +77,28 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         duration: 800,
       });
     },
-  }), []);
+    flyToProvince: (prefix: string) => {
+      if (!map.current || !geojsonRef.current) return;
+      const features = geojsonRef.current.features.filter(
+        (f) => f.properties?.code?.startsWith(prefix)
+      );
+      if (!features.length) return;
+      const bounds = calcBounds(features);
+      map.current.fitBounds(bounds, { padding: 40, duration: 800 });
+    },
+    resetView: () => {
+      if (!map.current) return;
+      map.current.flyTo({
+        center: [KOREA_CENTER.longitude, KOREA_CENTER.latitude],
+        zoom: KOREA_CENTER.zoom,
+        duration: 800,
+      });
+    },
+  }), [calcBounds]);
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
-
-    const tiles = getBasemapTiles(basemapStyle);
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -93,9 +107,9 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         sources: {
           basemap: {
             type: "raster",
-            tiles: [tiles.url],
+            tiles: [BASEMAP_TILES.url],
             tileSize: 256,
-            attribution: tiles.attribution,
+            attribution: BASEMAP_TILES.attribution,
           },
         },
         layers: [
@@ -130,28 +144,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Switch basemap tiles
-  useEffect(() => {
-    if (!mapReady || !map.current) return;
-    const tiles = getBasemapTiles(basemapStyle);
-    const source = map.current.getSource("basemap") as maplibregl.RasterTileSource;
-    if (source) {
-      map.current.removeLayer("basemap-layer");
-      map.current.removeSource("basemap");
-      map.current.addSource("basemap", {
-        type: "raster",
-        tiles: [tiles.url],
-        tileSize: 256,
-        attribution: tiles.attribution,
-      });
-      const firstLayerId = map.current.getLayer("region-fills") ? "region-fills" : undefined;
-      map.current.addLayer(
-        { id: "basemap-layer", type: "raster", source: "basemap", minzoom: 0, maxzoom: 19 },
-        firstLayerId
-      );
-    }
-  }, [mapReady, basemapStyle]);
-
   // Build color map for features
   const buildColorMap = useCallback(
     (lookup: Map<string, RegionData>, layer: MapLayerType) => {
@@ -178,7 +170,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
     [regions]
   );
 
-  // Format tooltip value
   const formatValue = useCallback(
     (data: RegionData, layer: MapLayerType): string => {
       switch (layer) {
@@ -230,7 +221,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       }),
     };
 
-    // Remove existing layers
     ["region-highlight", "region-borders", "region-fills"].forEach((id) => {
       if (map.current?.getLayer(id)) map.current.removeLayer(id);
     });
@@ -281,7 +271,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       filter: ["==", "code", ""],
     });
 
-    // Interactions
     let hoveredId: string | number | null = null;
 
     const onMouseMove = (e: maplibregl.MapLayerMouseEvent) => {

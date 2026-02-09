@@ -293,10 +293,10 @@ function HowtoTab() {
         <div className="flex gap-3">
           <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
           <div>
-            <b className="text-white text-xs">배경 지도</b>
+            <b className="text-white text-xs">상세 분석</b>
             <p className="text-xs text-gray-400 mt-1">
-              VWorld 기본/야간/위성 또는 CARTO 다크 배경 중 선택할 수 있습니다.
-              야간 모드는 데이터 색상이 더 잘 보이도록 도와줍니다.
+              지역 선택 시 오른쪽 패널에서 업종 분포, 같은 광역시/도 내 다른 지역과의 비교,
+              핵심 지표(기업 수, 고용, 신규 사업자율, 폐업률)를 확인할 수 있습니다.
             </p>
           </div>
         </div>
@@ -304,10 +304,10 @@ function HowtoTab() {
         <div className="flex gap-3">
           <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold flex-shrink-0">5</div>
           <div>
-            <b className="text-white text-xs">상세 분석</b>
+            <b className="text-white text-xs">데이터 내보내기</b>
             <p className="text-xs text-gray-400 mt-1">
-              지역 선택 시 오른쪽 패널에서 업종 분포, 같은 광역시/도 내 다른 지역과의 비교,
-              핵심 지표(기업 수, 고용, 신규 사업자율, 폐업률)를 확인할 수 있습니다.
+              왼쪽 패널 상단의 CSV 버튼으로 현재 표시된 지역 데이터를
+              엑셀에서 열 수 있는 CSV 파일로 다운로드할 수 있습니다.
             </p>
           </div>
         </div>

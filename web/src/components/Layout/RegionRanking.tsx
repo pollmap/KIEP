@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import { RegionData } from "@/lib/types";
-import { getHealthColor, PROVINCES, MapLayerType } from "@/lib/constants";
+import { getHealthColor, PROVINCES, PROVINCE_SHORT, MapLayerType } from "@/lib/constants";
 
 interface RegionRankingProps {
   regions: RegionData[];
@@ -11,6 +11,7 @@ interface RegionRankingProps {
   activeLayer: MapLayerType;
   provinceFilter: string | null;
   onProvinceFilter: (province: string | null) => void;
+  onExportCSV: () => void;
 }
 
 type SortKey = "healthScore" | "companyCount" | "employeeCount" | "growthRate" | "name";
@@ -22,6 +23,7 @@ export default function RegionRanking({
   activeLayer,
   provinceFilter,
   onProvinceFilter,
+  onExportCSV,
 }: RegionRankingProps) {
   const [sortKey, setSortKey] = useState<SortKey>("healthScore");
   const [sortAsc, setSortAsc] = useState(false);
@@ -56,7 +58,6 @@ export default function RegionRanking({
     return list;
   }, [regions, provinceFilter, search, sortKey, sortAsc]);
 
-  // Scroll selected item into view when selection changes (e.g. from map click)
   useEffect(() => {
     if (selectedCode && selectedItemRef.current) {
       selectedItemRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -72,26 +73,10 @@ export default function RegionRanking({
     }
   };
 
-  const getValue = (r: RegionData): { text: string; color?: string } => {
-    switch (activeLayer) {
-      case "healthScore":
-        return { text: r.healthScore.toFixed(1), color: getHealthColor(r.healthScore) };
-      case "companyCount":
-        return { text: r.companyCount.toLocaleString() };
-      case "employeeCount":
-        return { text: r.employeeCount.toLocaleString() };
-      case "growthRate":
-        return {
-          text: (r.growthRate >= 0 ? "+" : "") + r.growthRate.toFixed(1) + "%",
-          color: r.growthRate >= 0 ? "#10b981" : "#ef4444",
-        };
-    }
-  };
-
   const uniqueProvinces = useMemo(() => {
     const codes = new Set(regions.map((r) => r.code.substring(0, 2)));
     return Array.from(codes)
-      .map((c) => ({ code: c, name: PROVINCES[c] || c }))
+      .map((c) => ({ code: c, short: PROVINCE_SHORT[c] || c, full: PROVINCES[c] || c }))
       .sort((a, b) => a.code.localeCompare(b.code));
   }, [regions]);
 
@@ -106,8 +91,14 @@ export default function RegionRanking({
           <div className="text-[10px] text-gray-600 leading-tight">
             Korea Industrial<br />Ecosystem Platform
           </div>
+          <button
+            onClick={onExportCSV}
+            className="ml-auto px-2 py-1 rounded text-[10px] font-medium text-gray-500 hover:text-blue-400 border border-[var(--panel-border)] hover:border-blue-500/30 transition-colors"
+            title="CSV 다운로드"
+          >
+            CSV
+          </button>
         </div>
-        {/* Search */}
         <input
           type="text"
           placeholder="지역 검색..."
@@ -138,8 +129,9 @@ export default function RegionRanking({
                 ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                 : "text-gray-500 hover:text-gray-300 border border-transparent"
             }`}
+            title={p.full}
           >
-            {p.name.replace(/특별시|광역시|특별자치시|특별자치도|도/g, "")}
+            {p.short}
           </button>
         ))}
       </div>
@@ -163,7 +155,6 @@ export default function RegionRanking({
       {/* Region List */}
       <div ref={listRef} className="flex-1 overflow-y-auto">
         {filtered.map((r, i) => {
-          const val = getValue(r);
           const isSelected = r.code === selectedCode;
           return (
             <button

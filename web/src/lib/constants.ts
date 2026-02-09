@@ -69,6 +69,26 @@ export const PROVINCES: Record<string, string> = {
   "39": "제주특별자치도",
 };
 
+export const PROVINCE_SHORT: Record<string, string> = {
+  "11": "서울",
+  "21": "부산",
+  "22": "대구",
+  "23": "인천",
+  "24": "광주",
+  "25": "대전",
+  "26": "울산",
+  "29": "세종",
+  "31": "경기",
+  "32": "강원",
+  "33": "충북",
+  "34": "충남",
+  "35": "전북",
+  "36": "전남",
+  "37": "경북",
+  "38": "경남",
+  "39": "제주",
+};
+
 export type MapLayerType = "healthScore" | "companyCount" | "employeeCount" | "growthRate";
 
 export const MAP_LAYERS: { key: MapLayerType; label: string }[] = [
@@ -78,34 +98,10 @@ export const MAP_LAYERS: { key: MapLayerType; label: string }[] = [
   { key: "growthRate", label: "성장률" },
 ];
 
-export type BasemapStyle = "vworld-base" | "vworld-midnight" | "vworld-satellite" | "carto-dark";
-
-export function getBasemapTiles(style: BasemapStyle): { url: string; attribution: string } {
-  const vworldKey = process.env.NEXT_PUBLIC_VWORLD_API_KEY || "";
-
-  switch (style) {
-    case "vworld-base":
-      return {
-        url: `https://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/Base/{z}/{y}/{x}.png`,
-        attribution: "&copy; VWorld",
-      };
-    case "vworld-midnight":
-      return {
-        url: `https://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/midnight/{z}/{y}/{x}.png`,
-        attribution: "&copy; VWorld",
-      };
-    case "vworld-satellite":
-      return {
-        url: `https://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/Satellite/{z}/{y}/{x}.jpeg`,
-        attribution: "&copy; VWorld",
-      };
-    case "carto-dark":
-      return {
-        url: "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-        attribution: "&copy; OpenStreetMap &copy; CARTO",
-      };
-  }
-}
+export const BASEMAP_TILES = {
+  url: "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+  attribution: "&copy; OpenStreetMap &copy; CARTO",
+};
 
 // Layer-specific color bands for legend and coloring
 export const LAYER_COLOR_BANDS: Record<MapLayerType, { label: string; color: string; min?: number; max?: number }[]> = {
@@ -157,7 +153,6 @@ export function getLayerColor(layerType: MapLayerType, value: number, allValues:
   const rank = sorted.indexOf(value) / sorted.length;
 
   if (layerType === "companyCount") {
-    // Purple gradient
     if (rank >= 0.8) return "#7c3aed";
     if (rank >= 0.6) return "#8b5cf6";
     if (rank >= 0.4) return "#a78bfa";
@@ -165,7 +160,6 @@ export function getLayerColor(layerType: MapLayerType, value: number, allValues:
     return "#ddd6fe";
   }
 
-  // employeeCount - Teal gradient
   if (rank >= 0.8) return "#0d9488";
   if (rank >= 0.6) return "#14b8a6";
   if (rank >= 0.4) return "#5eead4";
