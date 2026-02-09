@@ -1,0 +1,133 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "부산항", "type": "international", "cargo": 22000000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.050, 35.080]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "인천항", "type": "international", "cargo": 3200000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.605, 37.440]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "울산항", "type": "international", "cargo": 2100000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.385, 35.490]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "광양항", "type": "international", "cargo": 2700000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.738, 34.915]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "평택당진항", "type": "international", "cargo": 1500000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.837, 36.933]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "목포항", "type": "international", "cargo": 400000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.379, 34.787]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "마산항", "type": "national", "cargo": 350000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.567, 35.182]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "동해항", "type": "national", "cargo": 300000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.135, 37.490]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "속초항", "type": "national", "cargo": 100000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.600, 38.200]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "제주항", "type": "national", "cargo": 200000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.520, 33.518]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "군산항", "type": "national", "cargo": 450000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.560, 35.983]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "포항항", "type": "national", "cargo": 500000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.388, 36.030]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "여수항", "type": "national", "cargo": 600000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.690, 34.740]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "서귀포항", "type": "local", "cargo": 50000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.560, 33.245]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "완도항", "type": "national", "cargo": 100000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.755, 34.310]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "통영항", "type": "national", "cargo": 80000, "icon": "port" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.425, 34.843]
+      }
+    }
+  ]
+}

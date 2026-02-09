@@ -56,6 +56,9 @@ export default function MapPage() {
   const [mobileDetail, setMobileDetail] = useState(false);
   const [showSubway, setShowSubway] = useState(false);
   const [showRoads, setShowRoads] = useState(false);
+  const [showRailway, setShowRailway] = useState(false);
+  const [showAirports, setShowAirports] = useState(false);
+  const [showPorts, setShowPorts] = useState(false);
   const mapRef = useRef<KoreaMapHandle>(null);
 
   useEffect(() => {
@@ -177,7 +180,7 @@ export default function MapPage() {
 
       {/* Map */}
       <div className="flex-1 relative">
-        <KoreaMap ref={mapRef} regions={displayedRegions} geojson={geojson} selectedRegion={selectedCode} onRegionSelect={handleRegionSelect} activeLayer={activeLayer} showSubway={showSubway} showRoads={showRoads} />
+        <KoreaMap ref={mapRef} regions={displayedRegions} geojson={geojson} selectedRegion={selectedCode} onRegionSelect={handleRegionSelect} activeLayer={activeLayer} showSubway={showSubway} showRoads={showRoads} showRailway={showRailway} showAirports={showAirports} showPorts={showPorts} />
 
         {/* Top controls */}
         <div className="absolute top-3 left-3 right-3 z-10 pointer-events-none">
@@ -187,21 +190,21 @@ export default function MapPage() {
         </div>
 
         {/* Overlay toggles - top right */}
-        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5">
-          <button
-            onClick={() => setShowSubway(!showSubway)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm transition-all ${showSubway ? "bg-[#0052A4] text-white" : "bg-white/90 text-[var(--text-secondary)] border border-[var(--border)] hover:bg-white"}`}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
-            지하철
-          </button>
-          <button
-            onClick={() => setShowRoads(!showRoads)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm transition-all ${showRoads ? "bg-[#1e40af] text-white" : "bg-white/90 text-[var(--text-secondary)] border border-[var(--border)] hover:bg-white"}`}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 20L8 4M16 20l4-16M3 12h18"/></svg>
-            고속도로
-          </button>
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
+          {[
+            { key: "subway", label: "지하철", active: showSubway, toggle: () => setShowSubway(!showSubway), color: "#0052A4", icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3v4H9V8c0-1.66 1.34-3 3-3z" },
+            { key: "roads", label: "고속도로", active: showRoads, toggle: () => setShowRoads(!showRoads), color: "#1e40af", icon: "M4 20L8 4M16 20l4-16M3 12h18" },
+            { key: "railway", label: "철도/KTX", active: showRailway, toggle: () => setShowRailway(!showRailway), color: "#dc2626", icon: "M4 15h16M6 19h12M8 11V7c0-2.2 1.8-4 4-4s4 1.8 4 4v4" },
+            { key: "airports", label: "공항", active: showAirports, toggle: () => setShowAirports(!showAirports), color: "#7c3aed", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+            { key: "ports", label: "항만", active: showPorts, toggle: () => setShowPorts(!showPorts), color: "#0284c7", icon: "M3 17h18M5 12l7-7 7 7M5 17v-5h14v5" },
+          ].map((item) => (
+            <button key={item.key} onClick={item.toggle}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium shadow-sm transition-all ${item.active ? "text-white" : "bg-white/90 text-[var(--text-secondary)] border border-[var(--border)] hover:bg-white"}`}
+              style={item.active ? { backgroundColor: item.color } : undefined}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={item.icon}/></svg>
+              {item.label}
+            </button>
+          ))}
         </div>
 
         {/* Bottom-left: Legend + Timeline stacked */}
@@ -220,15 +223,15 @@ export default function MapPage() {
 
       {/* Mobile Bottom Sheet */}
       {selectedRegion && mobileDetail && (
-        <div className="md:hidden fixed inset-x-0 bottom-0 z-30 bg-white border-t border-[var(--border)] rounded-t-2xl shadow-lg max-h-[70vh] overflow-y-auto animate-slide-up">
+        <div className="md:hidden fixed inset-x-0 bottom-0 z-30 bg-white border-t border-[var(--border)] rounded-t-2xl shadow-lg max-h-[75vh] overflow-y-auto animate-slide-up" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
           <div className="sticky top-0 bg-white z-10 pt-2 pb-1 border-b border-[var(--border-light)]">
-            <div className="w-9 h-1 rounded bg-[var(--border)] mx-auto mb-2" />
+            <div className="w-10 h-1 rounded-full bg-[var(--border)] mx-auto mb-2" />
             <div className="flex items-center justify-between px-4 pb-2">
               <div>
-                <div className="text-xs text-[var(--text-tertiary)]">{selectedRegion.province}</div>
-                <div className="font-bold">{selectedRegion.name}</div>
+                <div className="text-[10px] text-[var(--text-tertiary)]">{selectedRegion.province}</div>
+                <div className="text-base font-bold">{selectedRegion.name}</div>
               </div>
-              <button onClick={() => { setMobileDetail(false); setSelectedCode(null); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--bg-secondary)]">
+              <button onClick={() => { setMobileDetail(false); setSelectedCode(null); }} className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--bg-secondary)]">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--text-tertiary)" strokeWidth="2"><path d="M3 3l8 8M11 3l-8 8"/></svg>
               </button>
             </div>

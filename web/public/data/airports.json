@@ -1,0 +1,117 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "인천국제공항", "code": "ICN", "type": "international", "passengers": 71000000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.452, 37.449]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "김포국제공항", "code": "GMP", "type": "international", "passengers": 26000000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.802, 37.562]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "김해국제공항", "code": "PUS", "type": "international", "passengers": 18000000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.938, 35.179]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "제주국제공항", "code": "CJU", "type": "international", "passengers": 30000000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.493, 33.511]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "대구국제공항", "code": "TAE", "type": "domestic", "passengers": 3500000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.659, 35.894]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "청주국제공항", "code": "CJJ", "type": "domestic", "passengers": 3000000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.499, 36.717]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "무안국제공항", "code": "MWX", "type": "domestic", "passengers": 1500000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.383, 34.991]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "양양국제공항", "code": "YNY", "type": "domestic", "passengers": 800000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.669, 38.061]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "울산공항", "code": "USN", "type": "domestic", "passengers": 2000000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.352, 35.594]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "여수공항", "code": "RSU", "type": "domestic", "passengers": 1200000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.617, 34.843]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "사천공항", "code": "HIN", "type": "domestic", "passengers": 600000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.071, 35.088]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "군산공항", "code": "KUV", "type": "military_civil", "passengers": 300000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.616, 35.903]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "원주공항", "code": "WJU", "type": "military_civil", "passengers": 200000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.960, 37.441]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "포항공항", "code": "KPO", "type": "domestic", "passengers": 500000, "icon": "airport" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [129.420, 35.988]
+      }
+    }
+  ]
+}

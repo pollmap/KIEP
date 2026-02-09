@@ -291,24 +291,25 @@ export function getRegionValue(region: RegionData, layerKey: DataLayerKey): numb
   return (region as unknown as Record<string, number>)[layerKey] ?? 0;
 }
 
-// Robust percentile: counts how many values are <= the given value
+// Robust percentile: continuous rank in [0, 1]
 function percentileRank(value: number, sorted: number[]): number {
+  if (sorted.length === 0) return 0.5;
   let count = 0;
   for (let i = 0; i < sorted.length; i++) {
     if (sorted[i] <= value) count++;
     else break;
   }
-  return count / Math.max(sorted.length, 1);
+  // Use midpoint rank to avoid bottom bucket getting all 0-value items
+  return (count - 0.5) / Math.max(sorted.length, 1);
 }
 
 export function getLayerColor(layerKey: DataLayerKey, value: number, allValues: number[]): string {
   const def = getLayerDef(layerKey);
-  if (!def) return "#6b7280";
+  if (!def) return "#e2e8f0";
 
   if (layerKey === "healthScore") return getHealthColor(value);
 
   if (def.colorScheme === "diverging") {
-    // Signed-percent diverging layers (growth rates)
     const divergingKeys: DataLayerKey[] = [
       "growthRate", "populationGrowth", "priceChangeRate",
       "aptChangeRate", "grdpGrowth", "netMigration", "jobCreation",
@@ -320,22 +321,17 @@ export function getLayerColor(layerKey: DataLayerKey, value: number, allValues: 
       if (value >= -2) return def.palette[1];
       return def.palette[0];
     }
-    // Fallback diverging: quantile-based
     const sorted = [...allValues].sort((a, b) => a - b);
     const rank = percentileRank(value, sorted);
-    const idx = Math.min(4, Math.max(0, Math.floor(rank * 4.999)));
+    const idx = Math.min(4, Math.max(0, Math.floor(Math.max(0, rank) * 4.999)));
     return def.palette[idx];
   }
 
-  // "inverse" is same logic as "quantile" but palette is already reversed
-  // Quantile-based
+  // Quantile-based (covers both "quantile" and "inverse" schemes)
   const sorted = [...allValues].sort((a, b) => a - b);
-  const rank = percentileRank(value, sorted);
-  if (rank > 0.8) return def.palette[4];
-  if (rank > 0.6) return def.palette[3];
-  if (rank > 0.4) return def.palette[2];
-  if (rank > 0.2) return def.palette[1];
-  return def.palette[0];
+  const rank = Math.max(0, percentileRank(value, sorted));
+  const idx = Math.min(4, Math.floor(rank * 4.999));
+  return def.palette[idx];
 }
 
 export function formatLayerValue(value: number, layerKey: DataLayerKey): string {
