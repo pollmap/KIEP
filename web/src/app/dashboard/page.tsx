@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { RegionData } from "@/lib/types";
-import { getHealthColor, PROVINCES, PROVINCE_SHORT, DATA_CATEGORIES, getRegionValue, formatLayerValue, HEALTH_BANDS } from "@/lib/constants";
+import { getHealthColor, PROVINCE_SHORT, DATA_CATEGORIES, HEALTH_BANDS } from "@/lib/constants";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell,
   PieChart, Pie, AreaChart, Area,
@@ -159,7 +159,7 @@ export default function DashboardPage() {
           {/* Top 10 */}
           <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
-              건강도 상위 10 지역
+              건강도 상위 10개 지역
             </h3>
             <div className="space-y-1.5">
               {topRegions.map((r, i) => (
@@ -183,7 +183,7 @@ export default function DashboardPage() {
           {/* Bottom 10 */}
           <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
-              건강도 하위 10 지역
+              건강도 하위 10개 지역
             </h3>
             <div className="space-y-1.5">
               {bottomRegions.map((r, i) => (

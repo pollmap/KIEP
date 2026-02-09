@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { RegionData } from "@/lib/types";
-import { getHealthColor, PROVINCES, PROVINCE_SHORT, DATA_CATEGORIES, DataLayerKey, getRegionValue, formatLayerValue, getLayerDef } from "@/lib/constants";
+import { getHealthColor, PROVINCE_SHORT, DATA_CATEGORIES, DataLayerKey, getRegionValue, formatLayerValue } from "@/lib/constants";
 
 export default function RankingsPage() {
   const [regions, setRegions] = useState<RegionData[]>([]);
@@ -50,7 +50,7 @@ export default function RankingsPage() {
   const columns: { key: DataLayerKey; label: string; width: string }[] = [
     { key: "healthScore", label: "건강도", width: "w-20" },
     { key: "companyCount", label: "기업 수", width: "w-24" },
-    { key: "employeeCount", label: "고용인원", width: "w-24" },
+    { key: "employeeCount", label: "고용 인원", width: "w-24" },
     { key: "population", label: "인구", width: "w-24" },
     { key: "agingRate", label: "고령화율", width: "w-20" },
     { key: "employmentRate", label: "고용률", width: "w-20" },

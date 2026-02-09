@@ -65,7 +65,27 @@ export default function MapPage() {
     return baseRegions.map((r) => {
       const h = historicalData.data[r.code]?.[yearIdx];
       if (!h) return r;
-      return { ...r, healthScore: h.healthScore ?? r.healthScore, companyCount: h.companyCount ?? r.companyCount, employeeCount: h.employeeCount ?? r.employeeCount, population: h.population ?? r.population, agingRate: h.agingRate ?? r.agingRate, avgLandPrice: h.avgLandPrice ?? r.avgLandPrice, employmentRate: h.employmentRate ?? r.employmentRate, storeCount: h.storeCount ?? r.storeCount, transitScore: h.transitScore ?? r.transitScore, schoolCount: h.schoolCount ?? r.schoolCount };
+      return {
+        ...r,
+        healthScore: h.healthScore ?? r.healthScore,
+        companyCount: h.companyCount ?? r.companyCount,
+        employeeCount: h.employeeCount ?? r.employeeCount,
+        growthRate: h.growthRate ?? r.growthRate,
+        population: h.population ?? r.population,
+        populationGrowth: h.populationGrowth ?? r.populationGrowth,
+        agingRate: h.agingRate ?? r.agingRate,
+        youthRatio: h.youthRatio ?? r.youthRatio,
+        avgLandPrice: h.avgLandPrice ?? r.avgLandPrice,
+        priceChangeRate: h.priceChangeRate ?? r.priceChangeRate,
+        employmentRate: h.employmentRate ?? r.employmentRate,
+        unemploymentRate: h.unemploymentRate ?? r.unemploymentRate,
+        schoolCount: h.schoolCount ?? r.schoolCount,
+        studentCount: h.studentCount ?? r.studentCount,
+        storeCount: h.storeCount ?? r.storeCount,
+        storeOpenRate: h.storeOpenRate ?? r.storeOpenRate,
+        storeCloseRate: h.storeCloseRate ?? r.storeCloseRate,
+        transitScore: h.transitScore ?? r.transitScore,
+      };
     });
   }, [baseRegions, historicalData, currentYear]);
 
