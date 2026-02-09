@@ -50,7 +50,7 @@ async function fetchStoreData(year) {
       console.log("[data.go.kr] Using KOSIS business census data as primary source instead");
     }
   } catch (e) {
-    console.log(`[data.go.kr] Store API test: ${e.message}`);
+    if (process.env.DEBUG_DATAGOKR) console.log(`[data.go.kr] Store API: ${e.message}`);
   }
 
   return result;
@@ -82,7 +82,7 @@ async function fetchNpsData(year) {
       console.log(`[data.go.kr] NPS API accessible: ${totalCount} total workplaces`);
     }
   } catch (e) {
-    console.log(`[data.go.kr] NPS API: ${e.message}`);
+    if (process.env.DEBUG_DATAGOKR) console.log(`[data.go.kr] NPS API: ${e.message}`);
   }
 
   return result;

@@ -357,6 +357,24 @@ function printCoverageReport(regions) {
   const totalPct = ((totalReal / totalFields) * 100).toFixed(1);
   console.log(`\n  TOTAL: ${totalReal}/${totalFields} fields with real data (${totalPct}%)`);
   console.log(`  Regions: ${regions.length}`);
+
+  // Detailed per-field source report
+  console.log("\n=== Field Source Detail ===");
+  const fieldSourceCount = {};
+  for (const r of regions) {
+    for (const [field, source] of Object.entries(r._sources || {})) {
+      if (!fieldSourceCount[field]) fieldSourceCount[field] = { api: 0, simulated: 0 };
+      fieldSourceCount[field][source]++;
+    }
+  }
+  const sortedFields = Object.entries(fieldSourceCount).sort((a, b) => b[1].api - a[1].api);
+  for (const [field, counts] of sortedFields) {
+    if (counts.api > 0) {
+      console.log(`  [REAL] ${field}: ${counts.api}/${counts.api + counts.simulated} regions`);
+    }
+  }
+  const realFieldCount = sortedFields.filter(([, c]) => c.api > 0).length;
+  console.log(`\n  Fields with real data: ${realFieldCount}/${sortedFields.length}`);
 }
 
 // ══════════════════════════════════════════════
@@ -369,7 +387,7 @@ async function main() {
   console.log(`Target year: ${TARGET_YEAR}`);
   console.log(`Cache: ${useCache ? "enabled" : "fresh fetch (saving to cache)"}`);
   console.log(`Regions: ${REGIONS.length}`);
-  console.log(`API keys: KOSIS=${API_KEYS.kosis ? "✓" : "✗"}, R-ONE=${API_KEYS.rone ? "✓" : "✗"}, data.go.kr=${API_KEYS.dataGoKr ? "✓" : "✗"}, ECOS=${API_KEYS.ecos ? "✓" : "✗"}`);
+  console.log(`API keys: KOSIS=${API_KEYS.kosis ? "✓" : "✗"}, R-ONE=${API_KEYS.rone ? "✓" : "✗"}, data.go.kr=${API_KEYS.dataGoKr ? "✓" : "✗"}, ECOS=skipped`);
 
   // Step 1: Generate fallback data (complete set)
   console.log("\n=== Generating Fallback Data ===");
@@ -390,13 +408,17 @@ async function main() {
   const roneData = roneResult.status === "fulfilled" ? roneResult.value : new Map();
   const datagokrData = datagokrResult.status === "fulfilled" ? datagokrResult.value : new Map();
 
-  // Get population data for ECOS distribution weights
-  const regionPopulations = new Map();
-  for (const [code, data] of kosisData) {
-    if (data.population) regionPopulations.set(code, data.population);
+  // ECOS provides national-level data only - skip for 시군구
+  let ecosResult = new Map();
+  if (process.env.ENABLE_ECOS === "true") {
+    const regionPopulations = new Map();
+    for (const [code, data] of kosisData) {
+      if (data.population) regionPopulations.set(code, data.population);
+    }
+    ecosResult = await fetchAllEcosData(TARGET_YEAR, regionPopulations);
+  } else {
+    console.log("\n=== BOK ECOS: Skipped (national-level only, not useful for 시군구) ===");
   }
-
-  const ecosResult = await fetchAllEcosData(TARGET_YEAR, regionPopulations);
 
   // Step 3: Merge data per region (API > fallback)
   console.log("\n=== Merging Data ===");
