@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 use crate::AppState;
+use super::regions::AppError;
 
 pub fn router() -> Router<Arc<AppState>> {
     Router::new().route("/choropleth", get(get_choropleth))
@@ -33,7 +34,7 @@ pub struct ChoroplethEntry {
 async fn get_choropleth(
     State(state): State<Arc<AppState>>,
     Query(params): Query<ChoroplethParams>,
-) -> Json<Vec<ChoroplethEntry>> {
+) -> Result<Json<Vec<ChoroplethEntry>>, AppError> {
     let year_month = params.year_month.unwrap_or_default();
 
     let entries = sqlx::query_as::<_, ChoroplethEntry>(
@@ -60,8 +61,7 @@ async fn get_choropleth(
     )
     .bind(&year_month)
     .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
-    Json(entries)
+    Ok(Json(entries))
 }

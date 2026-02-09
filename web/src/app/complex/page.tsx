@@ -196,7 +196,7 @@ export default function ComplexPage() {
           ) : (
             <div className="flex items-center justify-center h-full text-gray-600">
               <div className="text-center">
-                <div className="text-4xl mb-3">C</div>
+                <div className="text-4xl mb-3">&loz;</div>
                 <div className="text-sm">산업단지를 선택하세요</div>
               </div>
             </div>
