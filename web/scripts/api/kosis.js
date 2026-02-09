@@ -175,6 +175,9 @@ async function discoverKosisTables() {
 
 /**
  * Try to match discovered tables to our data fields.
+ * For single-field tables: use itmNm=null (match any row) since
+ * the keyword that matched the TABLE NAME often differs from the ROW's ITM_NM.
+ * For multi-field tables: keep keywords for disambiguation.
  */
 function matchDiscoveredTables(discovered) {
   const configs = [];
@@ -192,20 +195,31 @@ function matchDiscoveredTables(discovered) {
       }
     }
 
-    if (Object.keys(matchedFields).length > 0) {
-      configs.push({
-        key: `discovered_${table.tblId}`,
-        orgId: table.orgId,
-        tblId: table.tblId,
-        tblNm: table.tblNm,
-        itmId: "ALL",
-        objL1: "ALL",
-        objL2: "",
-        prdSe: "Y",
-        fields: matchedFields,
-        regionField: "C1_NM",
-      });
+    const fieldCount = Object.keys(matchedFields).length;
+    if (fieldCount === 0) continue;
+
+    // Single-field tables: use itmNm=null (match any ITM_NM in the row)
+    // This fixes the bug where table name keyword != row ITM_NM
+    // e.g., table "상수도보급률(...)" matched keyword "상수도보급률"
+    //   but row ITM_NM is "보급률(%)" which does NOT contain "상수도보급률"
+    if (fieldCount === 1) {
+      for (const f of Object.values(matchedFields)) {
+        f.itmNm = null;
+      }
     }
+
+    configs.push({
+      key: `discovered_${table.tblId}`,
+      orgId: table.orgId,
+      tblId: table.tblId,
+      tblNm: table.tblNm,
+      itmId: "ALL",
+      objL1: "ALL",
+      objL2: "",
+      prdSe: "Y",
+      fields: matchedFields,
+      regionField: "C1_NM",
+    });
   }
 
   return configs;
@@ -266,59 +280,7 @@ const KOSIS_TABLES = {
     regionField: "C1_NM",
   },
 
-  // ── NEW: Research-based tables (e-지방지표 DT_1YL series) ──
-
-  birth: {
-    orgId: "101",
-    tblId: "DT_1YL20601",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      birthRate: { itmNm: "출생", parse: "float" },
-    },
-    regionField: "C1_NM",
-  },
-
-  crime: {
-    orgId: "101",
-    tblId: "DT_1YL20671",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      crimeRate: { itmNm: null, parse: "float" },
-    },
-    regionField: "C1_NM",
-  },
-
-  traffic_accidents: {
-    orgId: "101",
-    tblId: "DT_1YL20681",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      trafficAccidents: { itmNm: null, parse: "int" },
-    },
-    regionField: "C1_NM",
-  },
-
-  fire: {
-    orgId: "101",
-    tblId: "DT_1YL20691",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: {
-      fireIncidents: { itmNm: null, parse: "int" },
-    },
-    regionField: "C1_NM",
-  },
+  // ── CONFIRMED-WORKING tables from discovery (e-지방지표) ──
 
   healthcare: {
     orgId: "101",
@@ -334,122 +296,169 @@ const KOSIS_TABLES = {
     regionField: "C1_NM",
   },
 
-  road: {
+  road_paved: {
     orgId: "101",
-    tblId: "DT_1YL21091",
+    tblId: "DT_1YL20721",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
-    fields: {
-      roadDensity: { itmNm: null, parse: "float" },
-    },
+    fields: { roadDensity: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 
   water_supply: {
     orgId: "101",
-    tblId: "DT_1YL21101",
+    tblId: "DT_1YL20741",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
-    fields: {
-      waterSupply: { itmNm: null, parse: "float" },
-    },
+    fields: { waterSupply: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 
   sewerage: {
     orgId: "101",
-    tblId: "DT_1YL21111",
+    tblId: "DT_1YL20751",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
-    fields: {
-      sewerageRate: { itmNm: null, parse: "float" },
-    },
+    fields: { sewerageRate: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 
-  park: {
+  fire_per_capita: {
     orgId: "101",
-    tblId: "DT_1YL21121",
+    tblId: "DT_1YL21081",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
-    fields: {
-      parkArea: { itmNm: null, parse: "float" },
-    },
+    fields: { fireIncidents: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 
-  air_quality: {
+  drunk_traffic: {
     orgId: "101",
-    tblId: "DT_1YL21131",
+    tblId: "DT_1YL14001",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
-    fields: {
-      airQuality: { itmNm: null, parse: "float" },
-    },
+    fields: { trafficAccidents: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 
-  culture: {
+  waste_recycle: {
     orgId: "101",
-    tblId: "DT_1YL21161",
+    tblId: "DT_1YL21311",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
-    fields: {
-      culturalFacilities: { itmNm: null, parse: "int" },
-    },
+    fields: { wasteGeneration: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 
-  // Combined safety table (alternative IDs)
-  safety_combined: {
+  pop_growth: {
     orgId: "101",
-    tblId: "DT_1YL3001",
+    tblId: "DT_1YL20621",
     itmId: "ALL",
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
-    fields: {
-      crimeRate: { itmNm: "범죄", parse: "float" },
-      trafficAccidents: { itmNm: "교통사고", parse: "int" },
-      fireIncidents: { itmNm: "화재", parse: "int" },
-    },
+    fields: { populationGrowth: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 
-  // 사업체수/종사자수 (orgId=118 고용노동부)
-  business_census: {
-    orgId: "118",
-    tblId: "DT_SAUP120",
+  foreign_reg: {
+    orgId: "101",
+    tblId: "DT_1YL21261",
     itmId: "ALL",
     objL1: "ALL",
-    objL2: "ALL",
+    objL2: "",
     prdSe: "Y",
-    fields: {
-      companyCount: { itmNm: "사업체수", parse: "int" },
-      employeeCount: { itmNm: "종사자수", parse: "int" },
-    },
+    fields: { foreignRatio: { itmNm: null, parse: "float" } },
+    regionField: "C1_NM",
+  },
+
+  birth_count: {
+    orgId: "101",
+    tblId: "INH_1B81A01",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: { birthRate: { itmNm: null, parse: "float" } },
+    regionField: "C1_NM",
+  },
+
+  retail_company: {
+    orgId: "101",
+    tblId: "DT_1YL6102",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: { companyCount: { itmNm: null, parse: "int" } },
+    regionField: "C1_NM",
+  },
+
+  retail_employee: {
+    orgId: "101",
+    tblId: "DT_1YL6202",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: { employeeCount: { itmNm: null, parse: "int" } },
+    regionField: "C1_NM",
+  },
+
+  student_teacher: {
+    orgId: "101",
+    tblId: "DT_1YL21171",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: { studentCount: { itmNm: null, parse: "float" } },
+    regionField: "C1_NM",
+  },
+
+  university: {
+    orgId: "101",
+    tblId: "DT_1YL21181",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: { schoolCount: { itmNm: null, parse: "int" } },
+    regionField: "C1_NM",
+  },
+
+  grdp: {
+    orgId: "101",
+    tblId: "DT_1C65_03E",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: { grdp: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 };
 
 /**
  * Fetch a single KOSIS table.
+ * If the requested year returns err 30 (no data), automatically retries with year-1.
  */
-async function fetchKosisTable(tableConfig, year) {
+async function fetchKosisTable(tableConfig, year, _retryYear) {
   if (!API_KEYS.kosis) return new Map();
 
+  const fetchYear = _retryYear || year;
   const params = new URLSearchParams({
     method: "getList",
     apiKey: API_KEYS.kosis,
@@ -460,8 +469,8 @@ async function fetchKosisTable(tableConfig, year) {
     format: "json",
     jsonVD: "Y",
     prdSe: tableConfig.prdSe,
-    startPrdDe: String(year),
-    endPrdDe: String(year),
+    startPrdDe: String(fetchYear),
+    endPrdDe: String(fetchYear),
     orgId: tableConfig.orgId,
     tblId: tableConfig.tblId,
   });
@@ -473,6 +482,12 @@ async function fetchKosisTable(tableConfig, year) {
 
     if (!Array.isArray(data)) {
       if (data?.err) {
+        // err 30: "데이터가 존재하지 않습니다" — try previous year (common for GRDP lag)
+        if (data.err === "30" && !_retryYear && fetchYear > 2020) {
+          console.log(`[kosis:${tableConfig.tblId}] No data for ${fetchYear}, trying ${fetchYear - 1}...`);
+          await sleep(DELAY_MS);
+          return fetchKosisTable(tableConfig, year, fetchYear - 1);
+        }
         console.warn(`[kosis:${tableConfig.tblId}] err ${data.err}: ${data.errMsg}`);
       }
       return new Map();
@@ -481,11 +496,14 @@ async function fetchKosisTable(tableConfig, year) {
     // Debug: log first row structure for new tables
     if (data.length > 0) {
       const sample = data[0];
-      const keys = Object.keys(sample);
-      // Only log debug for tables that might have C2_NM
+      // Log 2-level tables and ITM_NM for debugging
       if (sample.C2_NM !== undefined) {
         console.log(`[kosis:${tableConfig.tblId}] 2-level: C1="${sample.C1_NM}", C2="${sample.C2_NM}", ITM="${sample.ITM_NM}"`);
       }
+    }
+
+    if (_retryYear) {
+      console.log(`[kosis:${tableConfig.tblId}] Using ${_retryYear} data (${year} not available)`);
     }
 
     return parseKosisResponse(data, tableConfig);
@@ -685,18 +703,18 @@ async function fetchKosisHistorical(tableKey, fieldKey, startYear, endYear) {
   }
 }
 
-// ── Historical field map: which tables provide multi-year data ──
+// ── Historical field map: which hardcoded tables provide multi-year data ──
 const HISTORICAL_FIELD_MAP = {
   financialIndependence: { tableKey: "fiscal", fieldKey: "financialIndependence" },
   population: { tableKey: "population_v3", fieldKey: "population" },
   foreignRatio: { tableKey: "foreigner_aging", fieldKey: "foreignRatio" },
   agingRate: { tableKey: "foreigner_aging", fieldKey: "agingRate" },
-  birthRate: { tableKey: "birth", fieldKey: "birthRate" },
-  companyCount: { tableKey: "business_census", fieldKey: "companyCount" },
-  employeeCount: { tableKey: "business_census", fieldKey: "employeeCount" },
+  birthRate: { tableKey: "birth_count", fieldKey: "birthRate" },
+  companyCount: { tableKey: "retail_company", fieldKey: "companyCount" },
+  employeeCount: { tableKey: "retail_employee", fieldKey: "employeeCount" },
   hospitalCount: { tableKey: "healthcare", fieldKey: "hospitalCount" },
-  crimeRate: { tableKey: "crime", fieldKey: "crimeRate" },
-  airQuality: { tableKey: "air_quality", fieldKey: "airQuality" },
+  roadDensity: { tableKey: "road_paved", fieldKey: "roadDensity" },
+  grdp: { tableKey: "grdp", fieldKey: "grdp" },
 };
 
 module.exports = {
