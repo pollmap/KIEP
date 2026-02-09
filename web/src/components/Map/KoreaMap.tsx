@@ -22,6 +22,10 @@ interface KoreaMapProps {
   activeLayer: DataLayerKey;
   showSubway?: boolean;
   showRoads?: boolean;
+  showRailway?: boolean;
+  showAirports?: boolean;
+  showPorts?: boolean;
+  showComplexes?: boolean;
 }
 
 export interface KoreaMapHandle {
@@ -31,7 +35,7 @@ export interface KoreaMapHandle {
 }
 
 const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
-  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, showSubway = false, showRoads = false },
+  { regions, geojson, selectedRegion, onRegionSelect, activeLayer, showSubway = false, showRoads = false, showRailway = false, showAirports = false, showPorts = false, showComplexes = false },
   ref
 ) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -154,7 +158,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
 
       return (code: string): string => {
         const data = lookup.get(code);
-        if (!data) return "#6b7280";
+        if (!data) return "#e2e8f0";
         const value = getRegionValue(data, layer);
         return getLayerColor(layer, value, allValues);
       };
@@ -415,6 +419,108 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       if (m.getLayer("roads-labels")) m.setLayoutProperty("roads-labels", "visibility", vis);
     }
   }, [mapReady, showRoads]);
+
+  // Railway overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+    if (!m.getSource("railways")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/railways.json`).then((r) => r.json()).then((data) => {
+        if (!m.getSource("railways")) {
+          m.addSource("railways", { type: "geojson", data });
+          m.addLayer({ id: "railways-layer", type: "line", source: "railways",
+            paint: { "line-color": ["get", "color"], "line-width": 2.5, "line-opacity": 0.8 },
+            layout: { visibility: showRailway ? "visible" : "none" } });
+          m.addLayer({ id: "railways-labels", type: "symbol", source: "railways",
+            layout: { "symbol-placement": "line", "text-field": ["get", "name"], "text-size": 10, "text-font": ["Open Sans Regular"], visibility: showRailway ? "visible" : "none" },
+            paint: { "text-color": ["get", "color"], "text-halo-color": "#ffffff", "text-halo-width": 1.5 }, minzoom: 8 });
+        }
+      }).catch(() => {});
+    } else {
+      const vis = showRailway ? "visible" : "none";
+      if (m.getLayer("railways-layer")) m.setLayoutProperty("railways-layer", "visibility", vis);
+      if (m.getLayer("railways-labels")) m.setLayoutProperty("railways-labels", "visibility", vis);
+    }
+  }, [mapReady, showRailway]);
+
+  // Airports overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+    if (!m.getSource("airports")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/airports.json`).then((r) => r.json()).then((data) => {
+        if (!m.getSource("airports")) {
+          m.addSource("airports", { type: "geojson", data });
+          m.addLayer({ id: "airports-circle", type: "circle", source: "airports",
+            paint: { "circle-radius": ["case", ["==", ["get", "type"], "international"], 8, 5], "circle-color": "#ef4444", "circle-stroke-width": 2, "circle-stroke-color": "#ffffff", "circle-opacity": 0.9 },
+            layout: { visibility: showAirports ? "visible" : "none" } });
+          m.addLayer({ id: "airports-labels", type: "symbol", source: "airports",
+            layout: { "text-field": ["get", "name"], "text-size": 11, "text-font": ["Open Sans Regular"], "text-offset": [0, 1.3], "text-anchor": "top", visibility: showAirports ? "visible" : "none" },
+            paint: { "text-color": "#dc2626", "text-halo-color": "#ffffff", "text-halo-width": 1.5 }, minzoom: 7 });
+        }
+      }).catch(() => {});
+    } else {
+      const vis = showAirports ? "visible" : "none";
+      if (m.getLayer("airports-circle")) m.setLayoutProperty("airports-circle", "visibility", vis);
+      if (m.getLayer("airports-labels")) m.setLayoutProperty("airports-labels", "visibility", vis);
+    }
+  }, [mapReady, showAirports]);
+
+  // Ports overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+    if (!m.getSource("ports")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/ports.json`).then((r) => r.json()).then((data) => {
+        if (!m.getSource("ports")) {
+          m.addSource("ports", { type: "geojson", data });
+          m.addLayer({ id: "ports-circle", type: "circle", source: "ports",
+            paint: { "circle-radius": ["case", ["==", ["get", "type"], "international"], 7, 5], "circle-color": "#0284c7", "circle-stroke-width": 2, "circle-stroke-color": "#ffffff", "circle-opacity": 0.9 },
+            layout: { visibility: showPorts ? "visible" : "none" } });
+          m.addLayer({ id: "ports-labels", type: "symbol", source: "ports",
+            layout: { "text-field": ["get", "name"], "text-size": 11, "text-font": ["Open Sans Regular"], "text-offset": [0, 1.3], "text-anchor": "top", visibility: showPorts ? "visible" : "none" },
+            paint: { "text-color": "#0369a1", "text-halo-color": "#ffffff", "text-halo-width": 1.5 }, minzoom: 7 });
+        }
+      }).catch(() => {});
+    } else {
+      const vis = showPorts ? "visible" : "none";
+      if (m.getLayer("ports-circle")) m.setLayoutProperty("ports-circle", "visibility", vis);
+      if (m.getLayer("ports-labels")) m.setLayoutProperty("ports-labels", "visibility", vis);
+    }
+  }, [mapReady, showPorts]);
+
+  // Industrial complexes overlay
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+    const m = map.current;
+    if (!m.getSource("complexes")) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      fetch(`${base}/data/industrial-complexes.json`).then((r) => r.json()).then((data) => {
+        if (!m.getSource("complexes")) {
+          m.addSource("complexes", { type: "geojson", data });
+          m.addLayer({ id: "complexes-circle", type: "circle", source: "complexes",
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 2, 10, 5, 14, 8],
+              "circle-color": ["match", ["get", "type"], "국가", "#2563eb", "일반", "#16a34a", "도시첨단", "#7c3aed", "농공", "#d97706", "#6b7280"],
+              "circle-opacity": 0.75,
+              "circle-stroke-width": 1,
+              "circle-stroke-color": "#ffffff",
+            },
+            layout: { visibility: showComplexes ? "visible" : "none" } });
+          m.addLayer({ id: "complexes-labels", type: "symbol", source: "complexes",
+            layout: { "text-field": ["get", "name"], "text-size": 10, "text-font": ["Open Sans Regular"], "text-offset": [0, 1.2], "text-anchor": "top", "text-optional": true, visibility: showComplexes ? "visible" : "none" },
+            paint: { "text-color": "#475569", "text-halo-color": "#ffffff", "text-halo-width": 1.5 }, minzoom: 10 });
+        }
+      }).catch(() => {});
+    } else {
+      const vis = showComplexes ? "visible" : "none";
+      if (m.getLayer("complexes-circle")) m.setLayoutProperty("complexes-circle", "visibility", vis);
+      if (m.getLayer("complexes-labels")) m.setLayoutProperty("complexes-labels", "visibility", vis);
+    }
+  }, [mapReady, showComplexes]);
 
   // Highlight selected
   useEffect(() => {
