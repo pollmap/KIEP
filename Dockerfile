@@ -4,6 +4,7 @@ FROM rust:bookworm AS builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock* ./
 COPY crates/ crates/
+COPY sql/ sql/
 
 # Build release binary
 RUN cargo build --release --bin kiep-api && \
