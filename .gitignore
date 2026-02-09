@@ -1,6 +1,5 @@
 # Rust
 /target/
-Cargo.lock
 
 # Web (Next.js)
 web/node_modules/
@@ -21,6 +20,14 @@ data/*.csv
 
 # OS
 .DS_Store
+
+# Python
+__pycache__/
+*.egg-info/
+.venv/
+
+# Docker
+.docker/
 
 # Misc
 *.pem
