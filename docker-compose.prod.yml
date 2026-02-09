@@ -1,0 +1,81 @@
+# KIEP Production Deployment
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  # ─── Database ───
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: kiep-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kiep}
+      POSTGRES_USER: ${POSTGRES_USER:-kiep}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kiep"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  # ─── Redis ───
+  redis:
+    image: redis:7-alpine
+    container_name: kiep-redis
+    restart: always
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - internal
+
+  # ─── Rust API Server ───
+  api:
+    build: .
+    container_name: kiep-api
+    restart: always
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-kiep}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-kiep}
+      API_HOST: 0.0.0.0
+      API_PORT: 3100
+      RUST_LOG: kiep=info,tower_http=info
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # ─── Caddy (Reverse Proxy + Auto HTTPS) ───
+  caddy:
+    image: caddy:2-alpine
+    container_name: kiep-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./web/out:/srv/web
+    depends_on:
+      - api
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+  redisdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:

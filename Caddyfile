@@ -1,0 +1,31 @@
+# ─────────────────────────────────────────
+# KIEP Production Caddyfile
+# ─────────────────────────────────────────
+# 사용 전 {$DOMAIN}을 실제 도메인으로 바꾸세요.
+# 예: kiep.example.com
+#
+# 도메인 없이 IP로만 쓰려면:
+#   :80 {
+# 으로 바꾸세요 (HTTPS 없이 HTTP만)
+# ─────────────────────────────────────────
+
+{$DOMAIN:localhost} {
+	# API 요청 → Rust 서버로 프록시
+	handle /api/* {
+		reverse_proxy api:3100
+	}
+
+	# 그 외 → 프론트엔드 정적 파일
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	# 압축
+	encode gzip
+
+	# 정적 데이터 캐싱
+	@static path /data/*
+	header @static Cache-Control "public, max-age=3600"
+}
