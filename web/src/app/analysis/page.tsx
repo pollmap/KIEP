@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { RegionData, HistoricalData } from "@/lib/types";
-import { getHealthColor, PROVINCE_SHORT, DATA_CATEGORIES, DataLayerKey, getRegionValue, formatLayerValue, getLayerDef, DataCategory } from "@/lib/constants";
+import { getHealthColor, PROVINCE_SHORT, DATA_CATEGORIES, DataLayerKey, getRegionValue, formatLayerValue, getLayerDef, DataCategory, DATA_TYPE_LABELS, areTypesCorrelatable } from "@/lib/constants";
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
   LineChart, Line, Legend,
@@ -218,14 +218,14 @@ export default function AnalysisPage() {
                   <span className="text-xs text-[var(--text-tertiary)]">X축</span>
                   <select value={xKey} onChange={(e) => setXKey(e.target.value as DataLayerKey)}
                     className="text-sm border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]">
-                    {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+                    {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label} [{DATA_TYPE_LABELS[l.dataType]}]</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[var(--text-tertiary)]">Y축</span>
                   <select value={yKey} onChange={(e) => setYKey(e.target.value as DataLayerKey)}
                     className="text-sm border border-[var(--border)] rounded-lg px-2.5 py-1.5 bg-white text-[var(--text-primary)] outline-none focus:border-[var(--accent)]">
-                    {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+                    {allLayers.map((l) => <option key={l.key} value={l.key}>{l.label} [{DATA_TYPE_LABELS[l.dataType]}]</option>)}
                   </select>
                 </div>
                 {regression && (
@@ -273,26 +273,69 @@ export default function AnalysisPage() {
               </div>
             </div>
 
-            {/* Quick presets */}
+            {/* Quick presets - grouped by analysis type */}
             <div className="bg-white rounded-xl border border-[var(--border)] p-4 shadow-sm">
-              <h3 className="text-xs font-semibold text-[var(--text-tertiary)] mb-2">추천 분석 조합</h3>
-              <div className="flex flex-wrap gap-2">
-                {[
+              <h3 className="text-xs font-semibold text-[var(--text-tertiary)] mb-3">추천 분석 조합</h3>
+              {[
+                { group: "규모 분석 (수량 vs 수량)", presets: [
                   { x: "companyCount" as const, y: "employeeCount" as const, label: "사업체 vs 종사자" },
                   { x: "population" as const, y: "grdp" as const, label: "인구 vs GRDP" },
-                  { x: "agingRate" as const, y: "closureRate" as const, label: "고령화 vs 폐업" },
-                  { x: "employmentRate" as const, y: "avgWage" as const, label: "고용률 vs 임금" },
+                  { x: "storeCount" as const, y: "hospitalCount" as const, label: "상가 vs 의료기관" },
+                ]},
+                { group: "구조 분석 (비율 vs 비율)", presets: [
+                  { x: "agingRate" as const, y: "closureRate" as const, label: "고령화 vs 폐업률" },
+                  { x: "employmentRate" as const, y: "youthRatio" as const, label: "고용률 vs 청년비율" },
+                  { x: "manufacturingRatio" as const, y: "smeRatio" as const, label: "제조업비중 vs 중소기업" },
+                ]},
+                { group: "영향 분석 (인과관계)", presets: [
                   { x: "avgLandPrice" as const, y: "population" as const, label: "지가 vs 인구" },
-                  { x: "airQuality" as const, y: "greenAreaRatio" as const, label: "미세먼지 vs 녹지" },
                   { x: "transitScore" as const, y: "aptPrice" as const, label: "교통접근성 vs 집값" },
                   { x: "universityCount" as const, y: "youthRatio" as const, label: "대학 vs 청년비율" },
-                ].map((p) => (
-                  <button key={p.label} onClick={() => { setXKey(p.x); setYKey(p.y); }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                      xKey === p.x && yKey === p.y ? "bg-[var(--accent-light)] text-[var(--accent)]" : "bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
-                    }`}
-                  >{p.label}</button>
-                ))}
+                  { x: "airQuality" as const, y: "greenAreaRatio" as const, label: "미세먼지 vs 녹지" },
+                ]},
+                { group: "성장 분석 (증감 관련)", presets: [
+                  { x: "growthRate" as const, y: "populationGrowth" as const, label: "기업성장 vs 인구성장" },
+                  { x: "grdpGrowth" as const, y: "priceChangeRate" as const, label: "GRDP성장 vs 지가변동" },
+                  { x: "avgWage" as const, y: "jobCreation" as const, label: "임금 vs 일자리증감" },
+                ]},
+              ].map((g) => (
+                <div key={g.group} className="mb-2 last:mb-0">
+                  <div className="text-[9px] text-[var(--text-tertiary)] mb-1">{g.group}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {g.presets.map((p) => {
+                      const xDt = getLayerDef(p.x)?.dataType;
+                      const yDt = getLayerDef(p.y)?.dataType;
+                      const compatible = xDt && yDt && areTypesCorrelatable(xDt, yDt);
+                      return (
+                        <button key={p.label} onClick={() => { setXKey(p.x); setYKey(p.y); }}
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                            xKey === p.x && yKey === p.y ? "bg-[var(--accent-light)] text-[var(--accent)]" : "bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+                          }`}
+                        >
+                          {p.label}
+                          {compatible && <span className="ml-1 text-[8px] text-emerald-500">&#x2713;</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Data type compatibility hint */}
+            <div className="bg-white rounded-xl border border-[var(--border)] p-3 shadow-sm">
+              <div className="flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
+                <span className="font-medium">현재 조합:</span>
+                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">{DATA_TYPE_LABELS[xDef?.dataType ?? "count"]}</span>
+                <span>vs</span>
+                <span className="px-1.5 py-0.5 rounded bg-violet-50 text-violet-600">{DATA_TYPE_LABELS[yDef?.dataType ?? "count"]}</span>
+                {xDef?.dataType && yDef?.dataType && (
+                  <span className={`ml-auto px-1.5 py-0.5 rounded text-[9px] font-medium ${
+                    areTypesCorrelatable(xDef.dataType, yDef.dataType) ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                  }`}>
+                    {areTypesCorrelatable(xDef.dataType, yDef.dataType) ? "분석 적합" : "주의: 다른 유형"}
+                  </span>
+                )}
               </div>
             </div>
           </div>
