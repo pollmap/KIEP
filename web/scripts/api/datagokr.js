@@ -7,6 +7,14 @@ const { cachedFetch } = require("../lib/cache");
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ── Unwrap _raw responses from stale cache ──
+function unwrapResponse(data) {
+  if (data && data._raw && typeof data._raw === "string") {
+    try { return JSON.parse(data._raw); } catch { return data; }
+  }
+  return data;
+}
+
 /**
  * Fetch 소상공인 상가정보 (store counts by region).
  * API: 소상공인시장진흥공단_상가(상권)정보
@@ -35,7 +43,7 @@ async function fetchStoreData(year) {
     });
 
     const url = `${baseUrl}?${params.toString()}`;
-    const data = await cachedFetch(url);
+    const data = unwrapResponse(await cachedFetch(url));
 
     if (data?.body?.totalCount || data?.response?.body?.totalCount) {
       console.log("[data.go.kr] Store API accessible, but individual store aggregation is slow");
@@ -67,7 +75,7 @@ async function fetchNpsData(year) {
     });
 
     const url = `${baseUrl}?${params.toString()}`;
-    const data = await cachedFetch(url);
+    const data = unwrapResponse(await cachedFetch(url));
 
     const totalCount = data?.response?.body?.totalCount || 0;
     if (totalCount > 0) {

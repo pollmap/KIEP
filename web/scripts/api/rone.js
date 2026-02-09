@@ -10,6 +10,14 @@ const { cachedFetch } = require("../lib/cache");
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ── Unwrap _raw responses from stale cache ──
+function unwrapResponse(data) {
+  if (data && data._raw && typeof data._raw === "string") {
+    try { return JSON.parse(data._raw); } catch { return data; }
+  }
+  return data;
+}
+
 // R-ONE statistical table IDs
 // landPrice A_2024_00900 confirmed working (5359 rows)
 const RONE_TABLES = {
@@ -76,7 +84,8 @@ async function fetchAllRoneData(year) {
         Type: "json",
       });
       const url = `${RONE_BASE}?${params.toString()}`;
-      const data = await cachedFetch(url);
+      const raw = await cachedFetch(url);
+      const data = unwrapResponse(raw);
 
       // R-ONE response structure varies - try multiple paths
       const rows = data?.SttsApiTblData?.[1]?.row

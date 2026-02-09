@@ -11,6 +11,14 @@ const { cachedFetch } = require("../lib/cache");
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ── Unwrap _raw responses from stale cache ──
+function unwrapResponse(data) {
+  if (data && data._raw && typeof data._raw === "string") {
+    try { return JSON.parse(data._raw); } catch { return data; }
+  }
+  return data;
+}
+
 // Province name normalization for ECOS matching
 const ECOS_PROVINCE_MAP = {
   "서울": "11", "부산": "21", "대구": "22", "인천": "23",
@@ -34,7 +42,8 @@ async function fetchEcosTable(statCode, itemCode, cycle, startYear, endYear) {
   const url = `${ECOS_BASE}/${API_KEYS.ecos}/json/kr/1/1000/${statCode}/${cycle}/${startYear}/${endYear}/${itemCode}`;
 
   try {
-    const data = await cachedFetch(url);
+    const raw = await cachedFetch(url);
+    const data = unwrapResponse(raw);
     const rows = data?.StatisticSearch?.row || [];
     if (rows.length === 0 && data) {
       const preview = JSON.stringify(data).substring(0, 300);
