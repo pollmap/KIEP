@@ -81,10 +81,15 @@ async function fetchAllRoneData(year) {
       const url = `${RONE_BASE}?${params.toString()}`;
       const data = await cachedFetch(url);
 
-      // R-ONE response structure: { SttsApiTblData: [{ head: [...] }, { row: [...] }] }
-      const rows = data?.SttsApiTblData?.[1]?.row || data?.row || [];
+      // R-ONE response structure varies - try multiple paths
+      const rows = data?.SttsApiTblData?.[1]?.row
+        || data?.SttsApiTblData?.row
+        || data?.row
+        || data?.body?.items
+        || [];
       if (!Array.isArray(rows) || rows.length === 0) {
-        console.log(`  ✗ ${tableKey}: no data (response type: ${typeof data})`);
+        const preview = JSON.stringify(data).substring(0, 300);
+        console.log(`  ✗ ${tableKey}: no data. Response: ${preview}`);
         continue;
       }
 

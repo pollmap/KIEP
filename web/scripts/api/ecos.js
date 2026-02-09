@@ -36,6 +36,10 @@ async function fetchEcosTable(statCode, itemCode, cycle, startYear, endYear) {
   try {
     const data = await cachedFetch(url);
     const rows = data?.StatisticSearch?.row || [];
+    if (rows.length === 0 && data) {
+      const preview = JSON.stringify(data).substring(0, 300);
+      console.warn(`[ecos:${statCode}] Empty response: ${preview}`);
+    }
     return rows;
   } catch (e) {
     console.warn(`[ecos] Fetch failed for ${statCode}: ${e.message}`);

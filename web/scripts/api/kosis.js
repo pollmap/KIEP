@@ -246,11 +246,15 @@ async function fetchKosisTable(tableKey, year) {
     const data = await cachedFetch(url);
 
     if (!Array.isArray(data)) {
-      // KOSIS may return error object
-      if (data?.err) {
-        console.warn(`[kosis:${tableKey}] API error: ${data.err}`);
+      // KOSIS returns error as object - log full response for debugging
+      const errMsg = data?.err || data?.errMsg || data?.message || data?.result?.message || "";
+      const errCode = data?.errCd || data?.result?.code || "";
+      if (errMsg || errCode) {
+        console.warn(`[kosis:${tableKey}] API error (${errCode}): ${errMsg}`);
       } else {
-        console.warn(`[kosis:${tableKey}] Unexpected response type: ${typeof data}`);
+        // Dump first 300 chars of response for diagnosis
+        const preview = JSON.stringify(data).substring(0, 300);
+        console.warn(`[kosis:${tableKey}] Non-array response: ${preview}`);
       }
       return new Map();
     }
