@@ -49,11 +49,86 @@ export const INDUSTRY_COLORS: Record<string, string> = {
   other: "#6b7280",
 };
 
-export const VWORLD_TILE_URL =
-  "https://api.vworld.kr/req/wmts/1.0.0/{key}/Base/{z}/{y}/{x}.png";
+export const PROVINCES: Record<string, string> = {
+  "11": "서울특별시",
+  "26": "부산광역시",
+  "27": "대구광역시",
+  "28": "인천광역시",
+  "29": "광주광역시",
+  "30": "대전광역시",
+  "31": "울산광역시",
+  "36": "세종특별자치시",
+  "41": "경기도",
+  "42": "강원특별자치도",
+  "43": "충청북도",
+  "44": "충청남도",
+  "45": "전북특별자치도",
+  "46": "전라남도",
+  "47": "경상북도",
+  "48": "경상남도",
+  "39": "제주특별자치도",
+};
 
-export const OSM_TILE_URL =
-  "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+export type MapLayerType = "healthScore" | "companyCount" | "employeeCount" | "growthRate";
 
-export const CARTO_DARK_TILE_URL =
-  "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png";
+export const MAP_LAYERS: { key: MapLayerType; label: string }[] = [
+  { key: "healthScore", label: "건강도" },
+  { key: "companyCount", label: "기업 수" },
+  { key: "employeeCount", label: "고용 인원" },
+  { key: "growthRate", label: "성장률" },
+];
+
+export type BasemapStyle = "vworld-base" | "vworld-midnight" | "vworld-satellite" | "carto-dark";
+
+export function getBasemapTiles(style: BasemapStyle): { url: string; attribution: string } {
+  const vworldKey = process.env.NEXT_PUBLIC_VWORLD_API_KEY || "";
+
+  switch (style) {
+    case "vworld-base":
+      return {
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/Base/{z}/{y}/{x}.png`,
+        attribution: "&copy; VWorld",
+      };
+    case "vworld-midnight":
+      return {
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/midnight/{z}/{y}/{x}.png`,
+        attribution: "&copy; VWorld",
+      };
+    case "vworld-satellite":
+      return {
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/Satellite/{z}/{y}/{x}.jpeg`,
+        attribution: "&copy; VWorld",
+      };
+    case "carto-dark":
+      return {
+        url: "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        attribution: "&copy; OpenStreetMap &copy; CARTO",
+      };
+  }
+}
+
+export function getLayerColor(layerType: MapLayerType, value: number, allValues: number[]): string {
+  if (layerType === "healthScore") {
+    return getHealthColor(value);
+  }
+
+  // For other layers, use quantile-based coloring
+  const sorted = [...allValues].sort((a, b) => a - b);
+  const rank = sorted.indexOf(value) / sorted.length;
+
+  if (layerType === "growthRate") {
+    // Diverging: red(-) → yellow(0) → green(+)
+    if (value < -2) return "#ef4444";
+    if (value < 0) return "#f97316";
+    if (value < 2) return "#fbbf24";
+    if (value < 5) return "#34d399";
+    return "#10b981";
+  }
+
+  // Sequential: light → dark blue
+  if (rank < 0.2) return "#1e3a5f";
+  if (rank < 0.4) return "#1d4ed8";
+  if (rank < 0.6) return "#3b82f6";
+  if (rank < 0.8) return "#60a5fa";
+  return "#93c5fd";
+}
