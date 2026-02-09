@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: kiep-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: kiep
+      POSTGRES_USER: kiep
+      POSTGRES_PASSWORD: kiep_dev_2025
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kiep"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: kiep-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
