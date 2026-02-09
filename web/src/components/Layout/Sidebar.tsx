@@ -26,8 +26,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  LineChart,
-  Line,
   Area,
   AreaChart,
 } from "recharts";
@@ -78,7 +76,6 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
 
   const band = HEALTH_BANDS.find((b) => region.healthScore >= b.min && region.healthScore <= b.max);
 
-  // Build trend data from historical
   const trendData = useMemo(() => {
     if (!historicalData || !historicalData.data[region.code]) return [];
     const regionHist = historicalData.data[region.code];
@@ -90,45 +87,50 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
     }));
   }, [historicalData, region.code, activeLayer]);
 
-  // Current active layer info
   const currentLayerDef = getLayerDef(activeLayer);
   const currentCat = getCategoryForLayer(activeLayer);
-  const currentValue = getRegionValue(region, activeLayer);
-
-  // Category metrics for sidebar
   const activeCatDef = currentCat ?? DATA_CATEGORIES[0];
 
+  const tooltipStyle = {
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    fontSize: "11px",
+    color: "#334155",
+    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.07)",
+  };
+
   return (
-    <div className="absolute top-0 right-0 h-full w-[380px] bg-[var(--panel-bg)] border-l border-[var(--panel-border)] z-20 overflow-y-auto">
+    <div className="h-full overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[var(--panel-border)]">
+      <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
         <div>
-          <div className="text-[10px] text-gray-500">{region.province}</div>
-          <h2 className="text-lg font-bold">{region.name}</h2>
+          <div className="text-[10px] text-[var(--text-tertiary)]">{region.province}</div>
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">{region.name}</h2>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded">
+          <span className="text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] px-2 py-0.5 rounded">
             #{healthRank} / {allRegions.length}
           </span>
           {currentYear !== 2025 && (
-            <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded font-medium">
+            <span className="text-[10px] text-[var(--accent)] bg-[var(--accent-light)] px-2 py-0.5 rounded font-medium">
               {currentYear}년
             </span>
           )}
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 text-gray-500 hover:text-white transition-colors text-sm"
+            className="hidden md:flex w-7 h-7 items-center justify-center rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors text-sm"
           >
-            &times;
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3l8 8M11 3l-8 8"/></svg>
           </button>
         </div>
       </div>
 
       {/* Health Score */}
-      <div className="p-4 border-b border-[var(--panel-border)]">
+      <div className="p-4 border-b border-[var(--border)]">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] text-gray-500">산업 건강도</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: healthColor + "20", color: healthColor }}>
+          <span className="text-[10px] text-[var(--text-tertiary)]">산업 건강도</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: healthColor + "15", color: healthColor }}>
             {band?.label}
           </span>
         </div>
@@ -136,16 +138,15 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
           <span className="text-4xl font-bold" style={{ color: healthColor }}>
             {region.healthScore.toFixed(1)}
           </span>
-          <span className="text-sm text-gray-500 mb-1">/ 100</span>
+          <span className="text-sm text-[var(--text-tertiary)] mb-1">/ 100</span>
           <span
-            className={`text-sm mb-1 ml-auto font-medium ${
-              region.growthRate >= 0 ? "text-emerald-400" : "text-red-400"
-            }`}
+            className="text-sm mb-1 ml-auto font-medium"
+            style={{ color: region.growthRate >= 0 ? "#16a34a" : "#dc2626" }}
           >
             {growthSign}{region.growthRate.toFixed(1)}%
           </span>
         </div>
-        <div className="mt-2 h-2 bg-gray-800 rounded-full overflow-hidden">
+        <div className="mt-2 h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{ width: `${region.healthScore}%`, backgroundColor: healthColor }}
@@ -158,10 +159,10 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
               <div
                 key={b.label}
                 className={`text-center py-1 rounded text-[9px] transition-all ${
-                  isActive ? "ring-1" : "opacity-40"
+                  isActive ? "" : "opacity-40"
                 }`}
                 style={{
-                  backgroundColor: b.color + "15",
+                  backgroundColor: b.color + "12",
                   color: b.color,
                   boxShadow: isActive ? `inset 0 0 0 1px ${b.color}` : undefined,
                 }}
@@ -174,19 +175,19 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
       </div>
 
       {/* Current Category Metrics */}
-      <div className="border-b border-[var(--panel-border)]">
-        <div className="px-4 pt-3 pb-1 text-[10px] text-gray-500 font-medium">
+      <div className="border-b border-[var(--border)]">
+        <div className="px-4 pt-3 pb-1 text-[10px] text-[var(--text-tertiary)] font-medium">
           {activeCatDef.icon} {activeCatDef.label} 지표
         </div>
-        <div className="grid grid-cols-2 gap-px bg-[var(--panel-border)]">
+        <div className="grid grid-cols-2 gap-px bg-[var(--border-light)]">
           {activeCatDef.layers.map((layer) => {
             const val = getRegionValue(region, layer.key);
             const formatted = formatLayerValue(val, layer.key);
             const isActive = layer.key === activeLayer;
             return (
-              <div key={layer.key} className={`bg-[var(--panel-bg)] p-3 ${isActive ? "ring-1 ring-blue-500/30" : ""}`}>
-                <div className="text-[10px] text-gray-500">{layer.label}</div>
-                <div className="text-lg font-semibold mt-0.5">{formatted}</div>
+              <div key={layer.key} className={`bg-white p-3 ${isActive ? "ring-1 ring-[var(--accent)]/30" : ""}`}>
+                <div className="text-[10px] text-[var(--text-tertiary)]">{layer.label}</div>
+                <div className="text-lg font-semibold text-[var(--text-primary)] mt-0.5">{formatted}</div>
               </div>
             );
           })}
@@ -195,8 +196,8 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
 
       {/* Trend Chart */}
       {trendData.length > 0 && (
-        <div className="p-4 border-b border-[var(--panel-border)]">
-          <div className="text-[10px] text-gray-500 mb-2">
+        <div className="p-4 border-b border-[var(--border)]">
+          <div className="text-[10px] text-[var(--text-tertiary)] mb-2">
             {currentLayerDef?.label} 추이 ({historicalData?.startYear}~{historicalData?.endYear})
           </div>
           <div className="h-[120px]">
@@ -204,36 +205,26 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
               <AreaChart data={trendData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#2563eb" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                <XAxis
-                  dataKey="year"
-                  tick={{ fill: "#666", fontSize: 9 }}
-                  tickCount={5}
-                />
-                <YAxis tick={{ fill: "#666", fontSize: 9 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="year" tick={{ fill: "#94a3b8", fontSize: 9 }} tickCount={5} />
+                <YAxis tick={{ fill: "#94a3b8", fontSize: 9 }} />
                 <Tooltip
-                  contentStyle={{
-                    background: "#1a1a1a",
-                    border: "1px solid #333",
-                    borderRadius: "6px",
-                    fontSize: "11px",
-                    color: "#eee",
-                  }}
+                  contentStyle={tooltipStyle}
                   formatter={(value: number) => [formatLayerValue(value, activeLayer), currentLayerDef?.label]}
                   labelFormatter={(label) => `${label}년`}
                 />
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="#3b82f6"
+                  stroke="#2563eb"
                   strokeWidth={2}
                   fill="url(#trendGrad)"
                   dot={false}
-                  activeDot={{ r: 3, fill: "#3b82f6" }}
+                  activeDot={{ r: 3, fill: "#2563eb" }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -242,7 +233,7 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
       )}
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 gap-px bg-[var(--panel-border)]">
+      <div className="grid grid-cols-2 gap-px bg-[var(--border-light)]">
         <MetricCard label="기업 수" value={region.companyCount.toLocaleString()} unit="개" />
         <MetricCard label="고용 인원" value={region.employeeCount.toLocaleString()} unit="명" />
         <MetricCard label="인구" value={region.population?.toLocaleString() ?? "N/A"} unit="명" />
@@ -262,8 +253,8 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
       </div>
 
       {/* Industry Distribution */}
-      <div className="p-4 border-b border-[var(--panel-border)]">
-        <div className="text-[10px] text-gray-500 mb-2">업종 분포</div>
+      <div className="p-4 border-b border-[var(--border)]">
+        <div className="text-[10px] text-[var(--text-tertiary)] mb-2">업종 분포</div>
         <div className="h-[140px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -281,13 +272,7 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{
-                  background: "#1a1a1a",
-                  border: "1px solid #333",
-                  borderRadius: "6px",
-                  fontSize: "11px",
-                  color: "#eee",
-                }}
+                contentStyle={tooltipStyle}
                 formatter={(value: number) => [`${value.toFixed(1)}%`, ""]}
               />
             </PieChart>
@@ -297,8 +282,8 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
           {industryData.map((item) => (
             <div key={item.name} className="flex items-center gap-1.5 text-[11px]">
               <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: item.color }} />
-              <span className="text-gray-400 truncate flex-1">{item.name}</span>
-              <span className="text-gray-500">{item.value.toFixed(0)}%</span>
+              <span className="text-[var(--text-secondary)] truncate flex-1">{item.name}</span>
+              <span className="text-[var(--text-tertiary)]">{item.value.toFixed(0)}%</span>
             </div>
           ))}
         </div>
@@ -307,7 +292,7 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
       {/* Same Province Comparison */}
       {compareRegions.length > 0 && (
         <div className="p-4">
-          <div className="text-[10px] text-gray-500 mb-2">{provinceName} 내 비교 (1위 / 중간 / 최하위)</div>
+          <div className="text-[10px] text-[var(--text-tertiary)] mb-2">{provinceName} 내 비교 (1위 / 중간 / 최하위)</div>
           <div className="h-[140px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -321,14 +306,14 @@ export default function Sidebar({ region, allRegions, onClose, activeLayer, hist
                 ]}
                 margin={{ top: 4, right: 0, left: -20, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                <XAxis dataKey="name" tick={{ fill: "#666", fontSize: 10 }} />
-                <YAxis domain={[0, 100]} tick={{ fill: "#666", fontSize: 10 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                <YAxis domain={[0, 100]} tick={{ fill: "#94a3b8", fontSize: 10 }} />
                 <Bar dataKey="score" radius={[3, 3, 0, 0]}>
                   {[region, ...compareRegions].map((r, i) => (
                     <Cell
                       key={i}
-                      fill={i === 0 ? "#3b82f6" : getHealthColor(r.healthScore) + "80"}
+                      fill={i === 0 ? "#2563eb" : getHealthColor(r.healthScore) + "80"}
                     />
                   ))}
                 </Bar>
@@ -355,17 +340,17 @@ function MetricCard({
   positive?: boolean;
 }) {
   return (
-    <div className="bg-[var(--panel-bg)] p-3">
-      <div className="text-[10px] text-gray-500">{label}</div>
+    <div className="bg-white p-3">
+      <div className="text-[10px] text-[var(--text-tertiary)]">{label}</div>
       <div className="flex items-baseline gap-1 mt-1">
         <span
           className={`text-xl font-semibold ${
-            danger ? "text-red-400" : positive ? "text-emerald-400" : ""
+            danger ? "text-[var(--danger)]" : positive ? "text-[var(--success)]" : "text-[var(--text-primary)]"
           }`}
         >
           {value}
         </span>
-        <span className="text-[10px] text-gray-500">{unit}</span>
+        <span className="text-[10px] text-[var(--text-tertiary)]">{unit}</span>
       </div>
     </div>
   );

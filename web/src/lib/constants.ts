@@ -180,7 +180,7 @@ export type MapLayerType = DataLayerKey;
 export const MAP_LAYERS = DATA_CATEGORIES[0].layers.map((l) => ({ key: l.key, label: l.label }));
 
 export const BASEMAP_TILES = {
-  url: "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+  url: "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
   attribution: "&copy; OpenStreetMap &copy; CARTO",
 };
 

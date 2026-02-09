@@ -28,7 +28,6 @@ export default function MapControls({
     setActiveCat(catKey);
     const cat = DATA_CATEGORIES.find((c) => c.key === catKey);
     if (cat && cat.layers.length > 0) {
-      // If switching category, select first layer of new category
       if (catKey !== currentCat?.key) {
         onLayerChange(cat.layers[0].key);
       }
@@ -36,22 +35,22 @@ export default function MapControls({
   };
 
   return (
-    <div className="absolute top-4 left-[340px] z-10 flex flex-col gap-2" style={{ maxWidth: "calc(100vw - 360px - 16px)" }}>
+    <div className="flex flex-col gap-2">
       {/* Category Tabs */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg p-1 flex gap-0.5 flex-wrap">
+        <div className="bg-white border border-[var(--border)] rounded-xl p-1 flex gap-0.5 flex-wrap shadow-sm">
           {DATA_CATEGORIES.map((cat) => (
             <button
               key={cat.key}
               onClick={() => handleCatClick(cat.key)}
-              className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                 activeCat === cat.key
-                  ? "bg-blue-500/20 text-blue-400"
-                  : "text-gray-500 hover:text-gray-300"
+                  ? "bg-[var(--accent-light)] text-[var(--accent)]"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
               }`}
             >
               <span className="mr-1">{cat.icon}</span>
-              {cat.label}
+              <span className="hidden sm:inline">{cat.label}</span>
             </button>
           ))}
         </div>
@@ -59,24 +58,25 @@ export default function MapControls({
         {/* Help Button */}
         <button
           onClick={onHelpOpen}
-          className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg px-3 py-1.5 text-gray-500 hover:text-blue-400 hover:border-blue-500/30 transition-colors text-xs font-medium whitespace-nowrap"
+          className="bg-white border border-[var(--border)] rounded-xl px-3 py-1.5 text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-colors text-xs font-medium whitespace-nowrap shadow-sm"
           title="사용 설명서"
         >
-          사용 설명서
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline -mt-0.5 mr-1"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+          도움말
         </button>
       </div>
 
       {/* Sub-Layer Buttons */}
       {selectedCategory.layers.length > 1 && (
-        <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg p-1 flex gap-0.5 w-fit">
+        <div className="bg-white border border-[var(--border)] rounded-xl p-1 flex gap-0.5 w-fit shadow-sm">
           {selectedCategory.layers.map((layer) => (
             <button
               key={layer.key}
               onClick={() => onLayerChange(layer.key)}
-              className={`px-3 py-1 rounded text-[11px] font-medium transition-colors ${
+              className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-colors ${
                 activeLayer === layer.key
-                  ? "bg-white/10 text-white"
-                  : "text-gray-500 hover:text-gray-300"
+                  ? "bg-[var(--accent-light)] text-[var(--accent)]"
+                  : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
               }`}
             >
               {layer.label}

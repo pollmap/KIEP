@@ -62,7 +62,6 @@ export default function RegionRanking({
     return list;
   }, [regions, provinceFilter, search, sortKey, sortAsc]);
 
-  // All values for color computation
   const allLayerValues = useMemo(
     () => regions.map((r) => getRegionValue(r, activeLayer)),
     [regions, activeLayer]
@@ -91,25 +90,20 @@ export default function RegionRanking({
   }, [regions]);
 
   return (
-    <div className="absolute top-0 left-0 h-full w-[320px] bg-[var(--panel-bg)] border-r border-[var(--panel-border)] z-20 flex flex-col">
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-3 border-b border-[var(--panel-border)]">
+      <div className="p-3 border-b border-[var(--border)]">
         <div className="flex items-center gap-2 mb-2">
-          <div className="text-lg font-bold tracking-tight">
-            <span className="text-blue-400">K</span>IEP
-          </div>
-          <div className="text-[10px] text-gray-600 leading-tight">
-            Korea Industrial<br />Ecosystem Platform
-          </div>
+          <div className="text-sm font-semibold text-[var(--text-primary)]">지역 목록</div>
           <div className="ml-auto flex items-center gap-1.5">
             {currentYear !== 2025 && (
-              <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded font-medium tabular-nums">
+              <span className="text-[10px] text-[var(--accent)] bg-[var(--accent-light)] px-2 py-0.5 rounded font-medium tabular-nums">
                 {currentYear}
               </span>
             )}
             <button
               onClick={onExportCSV}
-              className="px-2 py-1 rounded text-[10px] font-medium text-gray-500 hover:text-blue-400 border border-[var(--panel-border)] hover:border-blue-500/30 transition-colors"
+              className="px-2 py-1 rounded text-[10px] font-medium text-[var(--text-tertiary)] hover:text-[var(--accent)] border border-[var(--border)] hover:border-[var(--accent)]/30 transition-colors"
               title="CSV 다운로드"
             >
               CSV
@@ -121,18 +115,18 @@ export default function RegionRanking({
           placeholder="지역 검색..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-3 py-1.5 bg-black/30 border border-[var(--panel-border)] rounded text-sm text-white placeholder-gray-600 outline-none focus:border-blue-500/50"
+          className="w-full px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] outline-none focus:border-[var(--accent)] transition-colors"
         />
       </div>
 
       {/* Province Filter */}
-      <div className="px-3 py-2 border-b border-[var(--panel-border)] flex flex-wrap gap-1">
+      <div className="px-3 py-2 border-b border-[var(--border)] flex flex-wrap gap-1">
         <button
           onClick={() => onProvinceFilter(null)}
           className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
             !provinceFilter
-              ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-              : "text-gray-500 hover:text-gray-300 border border-transparent"
+              ? "bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent)]/20"
+              : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] border border-transparent"
           }`}
         >
           전체
@@ -143,8 +137,8 @@ export default function RegionRanking({
             onClick={() => onProvinceFilter(provinceFilter === p.code ? null : p.code)}
             className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
               provinceFilter === p.code
-                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                : "text-gray-500 hover:text-gray-300 border border-transparent"
+                ? "bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent)]/20"
+                : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] border border-transparent"
             }`}
             title={p.full}
           >
@@ -154,17 +148,17 @@ export default function RegionRanking({
       </div>
 
       {/* Sort Headers */}
-      <div className="px-3 py-1.5 border-b border-[var(--panel-border)] flex items-center text-[10px] text-gray-600">
-        <button onClick={() => handleSort("name")} className="flex-1 text-left hover:text-gray-400">
+      <div className="px-3 py-1.5 border-b border-[var(--border)] flex items-center text-[10px] text-[var(--text-tertiary)]">
+        <button onClick={() => handleSort("name")} className="flex-1 text-left hover:text-[var(--text-secondary)]">
           지역 {sortKey === "name" && (sortAsc ? "↑" : "↓")}
         </button>
-        <button onClick={() => handleSort("healthScore")} className="w-14 text-right hover:text-gray-400">
+        <button onClick={() => handleSort("healthScore")} className="w-14 text-right hover:text-[var(--text-secondary)]">
           건강도 {sortKey === "healthScore" && (sortAsc ? "↑" : "↓")}
         </button>
-        <button onClick={() => handleSort(activeLayer)} className="w-20 text-right hover:text-gray-400">
+        <button onClick={() => handleSort(activeLayer)} className="w-20 text-right hover:text-[var(--text-secondary)]">
           {layerDef?.label ?? "값"} {sortKey === activeLayer && (sortAsc ? "↑" : "↓")}
         </button>
-        <button onClick={() => handleSort("growthRate")} className="w-14 text-right hover:text-gray-400">
+        <button onClick={() => handleSort("growthRate")} className="w-14 text-right hover:text-[var(--text-secondary)]">
           성장 {sortKey === "growthRate" && (sortAsc ? "↑" : "↓")}
         </button>
       </div>
@@ -180,18 +174,18 @@ export default function RegionRanking({
               key={r.code}
               ref={isSelected ? selectedItemRef : undefined}
               onClick={() => onSelect(r.code)}
-              className={`w-full px-3 py-2 flex items-center text-left transition-colors border-b border-[var(--panel-border)]/50 ${
+              className={`w-full px-3 py-2 flex items-center text-left transition-colors border-b border-[var(--border-light)] ${
                 isSelected
-                  ? "bg-blue-500/10 border-l-2 border-l-blue-400"
-                  : "hover:bg-white/5 border-l-2 border-l-transparent"
+                  ? "bg-[var(--accent-light)] border-l-2 border-l-[var(--accent)]"
+                  : "hover:bg-[var(--bg-secondary)] border-l-2 border-l-transparent"
               }`}
             >
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium truncate">
-                  <span className="text-gray-500 mr-1">{i + 1}</span>
+                <div className="text-xs font-medium text-[var(--text-primary)] truncate">
+                  <span className="text-[var(--text-tertiary)] mr-1">{i + 1}</span>
                   {r.name}
                 </div>
-                <div className="text-[10px] text-gray-600 truncate">{r.province}</div>
+                <div className="text-[10px] text-[var(--text-tertiary)] truncate">{r.province}</div>
               </div>
               <div className="w-14 text-right">
                 <span className="text-xs font-semibold" style={{ color: getHealthColor(r.healthScore) }}>
@@ -206,7 +200,7 @@ export default function RegionRanking({
               <div className="w-14 text-right">
                 <span
                   className="text-[11px] font-medium"
-                  style={{ color: r.growthRate >= 0 ? "#10b981" : "#ef4444" }}
+                  style={{ color: r.growthRate >= 0 ? "#16a34a" : "#dc2626" }}
                 >
                   {r.growthRate >= 0 ? "+" : ""}
                   {r.growthRate.toFixed(1)}%
@@ -218,7 +212,7 @@ export default function RegionRanking({
       </div>
 
       {/* Footer */}
-      <div className="px-3 py-2 border-t border-[var(--panel-border)] text-[10px] text-gray-600">
+      <div className="px-3 py-2 border-t border-[var(--border)] text-[10px] text-[var(--text-tertiary)]">
         {filtered.length}개 지역 {provinceFilter ? `(${PROVINCES[provinceFilter]})` : ""}
       </div>
     </div>

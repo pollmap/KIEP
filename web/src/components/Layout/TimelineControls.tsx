@@ -60,7 +60,6 @@ export default function TimelineControls({
     };
   }, []);
 
-  // Restart interval when speed changes during playback
   useEffect(() => {
     if (!playing) return;
     play();
@@ -76,11 +75,11 @@ export default function TimelineControls({
   const progress = ((currentYear - startYear) / totalYears) * 100;
 
   return (
-    <div className="bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg px-4 py-2.5 flex items-center gap-3 min-w-[420px]">
+    <div className="bg-white border border-[var(--border)] rounded-xl px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3 shadow-sm">
       {/* Play/Pause */}
       <button
         onClick={togglePlay}
-        className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors flex-shrink-0"
+        className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--accent-light)] text-[var(--accent)] hover:bg-[var(--accent)]/15 transition-colors flex-shrink-0"
         title={playing ? "일시정지" : "재생"}
       >
         {playing ? (
@@ -96,15 +95,15 @@ export default function TimelineControls({
       </button>
 
       {/* Year display */}
-      <div className="text-lg font-bold text-white tabular-nums min-w-[52px] text-center">
+      <div className="text-base md:text-lg font-bold text-[var(--text-primary)] tabular-nums min-w-[44px] text-center">
         {currentYear}
       </div>
 
       {/* Slider */}
-      <div className="flex-1 relative h-8 flex items-center">
-        <div className="absolute inset-x-0 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+      <div className="flex-1 relative h-8 flex items-center min-w-[100px]">
+        <div className="absolute inset-x-0 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-200"
+            className="h-full bg-[var(--accent)] rounded-full transition-all duration-200"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -120,13 +119,13 @@ export default function TimelineControls({
           className="absolute inset-x-0 w-full h-8 opacity-0 cursor-pointer"
         />
         {/* Tick marks */}
-        <div className="absolute inset-x-0 flex justify-between px-0 pointer-events-none">
+        <div className="absolute inset-x-0 hidden md:flex justify-between px-0 pointer-events-none">
           {Array.from({ length: Math.min(totalYears + 1, 11) }, (_, i) => {
             const year = startYear + Math.round((i * totalYears) / Math.min(totalYears, 10));
             return (
               <div key={year} className="flex flex-col items-center">
-                <div className="w-px h-1.5 bg-gray-600 mt-3" />
-                <span className="text-[8px] text-gray-600 mt-0.5">{year}</span>
+                <div className="w-px h-1.5 bg-[var(--border)] mt-3" />
+                <span className="text-[8px] text-[var(--text-tertiary)] mt-0.5">{year}</span>
               </div>
             );
           })}
@@ -134,15 +133,15 @@ export default function TimelineControls({
       </div>
 
       {/* Speed */}
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="hidden md:flex items-center gap-1 flex-shrink-0">
         {SPEEDS.map((s, i) => (
           <button
             key={s.label}
             onClick={() => setSpeedIdx(i)}
             className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
               speedIdx === i
-                ? "bg-blue-500/20 text-blue-400"
-                : "text-gray-600 hover:text-gray-400"
+                ? "bg-[var(--accent-light)] text-[var(--accent)]"
+                : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
             }`}
           >
             {s.label}
@@ -156,7 +155,7 @@ export default function TimelineControls({
           stop();
           onReset();
         }}
-        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+        className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--bg-secondary)] transition-colors flex-shrink-0"
         title="초기화"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">

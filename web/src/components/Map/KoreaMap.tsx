@@ -125,7 +125,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       maxZoom: 14,
     });
 
-    // Explicitly enable zoom interactions
     map.current.scrollZoom.enable();
     map.current.doubleClickZoom.enable();
     map.current.touchZoomRotate.enable();
@@ -147,7 +146,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Build color map for features
   const buildColorMap = useCallback(
     (lookup: Map<string, RegionData>, layer: DataLayerKey) => {
       const allValues = regions.map((r) => getRegionValue(r, layer));
@@ -202,8 +200,8 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         "fill-opacity": [
           "case",
           ["boolean", ["feature-state", "hover"], false],
-          0.88,
-          0.7,
+          0.85,
+          0.65,
         ],
       },
     });
@@ -216,8 +214,8 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
         "line-color": [
           "case",
           ["boolean", ["feature-state", "hover"], false],
-          "#ffffff",
-          "rgba(255,255,255,0.25)",
+          "#475569",
+          "rgba(148,163,184,0.4)",
         ],
         "line-width": [
           "case",
@@ -232,7 +230,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       id: "region-highlight",
       type: "line",
       source: "regions",
-      paint: { "line-color": "#3b82f6", "line-width": 3 },
+      paint: { "line-color": "#2563eb", "line-width": 3 },
       filter: ["==", "code", ""],
     });
 
@@ -262,7 +260,7 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
           .setHTML(
             `<div style="font-size:13px;line-height:1.6">
               <strong>${data.name}</strong>
-              <span style="color:#999;font-size:11px;margin-left:4px">${data.province}</span><br/>
+              <span style="color:#94a3b8;font-size:11px;margin-left:4px">${data.province}</span><br/>
               ${layerDef?.label ?? ""}: <b style="color:${colorFn(code)}">${formatted}</b><br/>
               기업: ${data.companyCount.toLocaleString()} &middot; 인구: ${data.population?.toLocaleString() ?? "N/A"}
             </div>`
@@ -286,7 +284,6 @@ const KoreaMap = forwardRef<KoreaMapHandle, KoreaMapProps>(function KoreaMap(
       if (code) onRegionSelect(code);
     };
 
-    // Double-click to zoom into region
     const onDblClick = (e: maplibregl.MapLayerMouseEvent) => {
       e.preventDefault();
       const code = e.features?.[0]?.properties?.code;
