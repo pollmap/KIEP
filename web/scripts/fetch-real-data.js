@@ -110,14 +110,11 @@ function computeDerivedFields(region, prevYearData) {
     region.jobCreation = region.employeeCount - prevYearData.employeeCount;
   }
 
-  // Beds per population
+  // Beds per population (always recompute from real inputs if available)
   if (region.hospitalCount && region.population) {
-    // Estimate ~50 beds per hospital on average
-    if (!region.bedsPerPopulation || region.bedsPerPopulation === 0) {
-      region.bedsPerPopulation = parseFloat(
-        ((region.hospitalCount * 50) / (region.population / 1000)).toFixed(1)
-      );
-    }
+    region.bedsPerPopulation = parseFloat(
+      ((region.hospitalCount * 50) / (region.population / 1000)).toFixed(1)
+    );
   }
 
   // Health score: weighted composite of ~10 indicators
@@ -159,6 +156,38 @@ function computeHealthScore(r) {
   if (weights > 0) {
     r.healthScore = parseFloat((score / weights).toFixed(1));
   }
+}
+
+/**
+ * Update _sources for derived fields whose inputs come from real API data.
+ * Called after computeDerivedFields() to fix source tracking.
+ */
+function updateDerivedSources(region, prevYearData) {
+  const s = region._sources;
+  if (!s) return;
+
+  // grdpGrowth: derived from grdp (current year) + grdp (previous year)
+  if (s.grdp === "api" && prevYearData?.grdp !== undefined) {
+    s.grdpGrowth = "api";
+  }
+
+  // growthRate: derived from companyCount (current) + companyCount (previous)
+  if (s.companyCount === "api" && prevYearData?.companyCount !== undefined) {
+    s.growthRate = "api";
+  }
+
+  // jobCreation: derived from employeeCount (current) + employeeCount (previous)
+  if (s.employeeCount === "api" && prevYearData?.employeeCount !== undefined) {
+    s.jobCreation = "api";
+  }
+
+  // bedsPerPopulation: derived from hospitalCount + population
+  if (s.hospitalCount === "api" && s.population === "api") {
+    s.bedsPerPopulation = "api";
+  }
+
+  // populationGrowth: may be overwritten by computeDerivedFields if we have prev year
+  // (but we also have a direct KOSIS source DT_1YL20621, so keep whichever is "api")
 }
 
 /**
@@ -473,6 +502,7 @@ async function main() {
   for (const region of mergedRegions) {
     const prevYear = prevYearKosis.get(region.code) || {};
     computeDerivedFields(region, prevYear);
+    updateDerivedSources(region, prevYear);
   }
 
   // Step 5: Coverage report

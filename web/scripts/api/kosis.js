@@ -13,6 +13,9 @@ const { cachedFetch } = require("../lib/cache");
 const DELAY_MS = 300;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Cache discovery results (same tables regardless of year)
+let _discoveredTablesCache = null;
+
 // ── Unwrap _raw responses from stale cache ──
 function unwrapResponse(data) {
   if (data && data._raw && typeof data._raw === "string") {
@@ -35,16 +38,18 @@ const FIELD_KEYWORDS = {
   foreignRatio: ["외국인", "외국인주민"],
   netMigration: ["순이동", "전입전출"],
   grdp: ["지역내총생산", "GRDP"],
-  taxRevenue: ["지방세", "세입"],
+  taxRevenue: ["지방세", "세입", "세수"],
   financialIndependence: ["재정자립도"],
   companyCount: ["사업체수", "사업체 수"],
   employeeCount: ["종사자수", "종사자 수"],
-  employmentRate: ["고용률"],
+  employmentRate: ["고용률", "취업률"],
   unemploymentRate: ["실업률"],
+  avgWage: ["평균임금", "임금"],
+  storeCount: ["소매", "상가", "도소매"],
   roadDensity: ["도로율", "도로포장"],
   waterSupply: ["상수도보급률", "상수도"],
   sewerageRate: ["하수도보급률", "하수도"],
-  parkArea: ["공원면적", "1인당 공원"],
+  parkArea: ["공원면적", "1인당 공원", "공원"],
   crimeRate: ["범죄발생", "범죄"],
   trafficAccidents: ["교통사고"],
   fireIncidents: ["화재발생", "화재"],
@@ -52,6 +57,7 @@ const FIELD_KEYWORDS = {
   doctorCount: ["의사수", "의사"],
   schoolCount: ["학교수", "학교 수"],
   studentCount: ["학생수", "학생 수"],
+  universityCount: ["대학교"],
   libraryCount: ["도서관수", "도서관"],
   airQuality: ["미세먼지", "대기오염"],
   greenAreaRatio: ["녹지비율", "녹지율"],
@@ -67,6 +73,12 @@ const FIELD_KEYWORDS = {
  */
 async function discoverKosisTables() {
   if (!API_KEYS.kosis) return [];
+
+  // Return cached results if available (discovery doesn't depend on year)
+  if (_discoveredTablesCache) {
+    console.log(`[kosis] Using cached discovery results (${_discoveredTablesCache.length} tables)`);
+    return _discoveredTablesCache;
+  }
 
   console.log("[kosis] Discovering available e-지방지표 tables...");
 
@@ -170,6 +182,7 @@ async function discoverKosisTables() {
     console.log("[kosis:discovery] No tables discovered (will use hardcoded tables only)");
   }
 
+  _discoveredTablesCache = discovered;
   return discovered;
 }
 
@@ -435,7 +448,29 @@ const KOSIS_TABLES = {
     objL1: "ALL",
     objL2: "",
     prdSe: "Y",
-    fields: { schoolCount: { itmNm: null, parse: "int" } },
+    fields: { universityCount: { itmNm: null, parse: "int" } },
+    regionField: "C1_NM",
+  },
+
+  net_migration: {
+    orgId: "101",
+    tblId: "INH_1B26001_A021",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: { netMigration: { itmNm: null, parse: "int" } },
+    regionField: "C1_NM",
+  },
+
+  youth_ratio: {
+    orgId: "101",
+    tblId: "DT_1YL20643",
+    itmId: "ALL",
+    objL1: "ALL",
+    objL2: "",
+    prdSe: "Y",
+    fields: { youthRatio: { itmNm: null, parse: "float" } },
     regionField: "C1_NM",
   },
 
@@ -453,18 +488,24 @@ const KOSIS_TABLES = {
 
 /**
  * Fetch a single KOSIS table.
- * If the requested year returns err 30 (no data), automatically retries with year-1.
+ * - err 30 (no data for year) → retries with year-1
+ * - err 20 (objL parameter error) → retries with alternative objL combinations
  */
-async function fetchKosisTable(tableConfig, year, _retryYear) {
+async function fetchKosisTable(tableConfig, year, _retryYear, _retryObjL) {
   if (!API_KEYS.kosis) return new Map();
 
   const fetchYear = _retryYear || year;
+
+  // Apply objL override if retrying
+  const effObjL1 = _retryObjL ? _retryObjL.objL1 : tableConfig.objL1;
+  const effObjL2 = _retryObjL ? _retryObjL.objL2 : (tableConfig.objL2 || "");
+
   const params = new URLSearchParams({
     method: "getList",
     apiKey: API_KEYS.kosis,
     itmId: tableConfig.itmId,
-    objL1: tableConfig.objL1,
-    objL2: tableConfig.objL2 || "",
+    objL1: effObjL1,
+    objL2: effObjL2,
     objL3: "", objL4: "", objL5: "", objL6: "", objL7: "", objL8: "",
     format: "json",
     jsonVD: "Y",
@@ -486,9 +527,27 @@ async function fetchKosisTable(tableConfig, year, _retryYear) {
         if (data.err === "30" && !_retryYear && fetchYear > 2020) {
           console.log(`[kosis:${tableConfig.tblId}] No data for ${fetchYear}, trying ${fetchYear - 1}...`);
           await sleep(DELAY_MS);
-          return fetchKosisTable(tableConfig, year, fetchYear - 1);
+          return fetchKosisTable(tableConfig, year, fetchYear - 1, _retryObjL);
         }
-        console.warn(`[kosis:${tableConfig.tblId}] err ${data.err}: ${data.errMsg}`);
+        // err 20: objL parameter error — try alternative combinations
+        if (data.err === "20" && !_retryObjL) {
+          const alternatives = [
+            { objL1: "", objL2: "" },
+            { objL1: "ALL", objL2: "0" },
+            { objL1: "0", objL2: "" },
+          ];
+          for (const alt of alternatives) {
+            await sleep(DELAY_MS);
+            const result = await fetchKosisTable(tableConfig, year, _retryYear, alt);
+            if (result.size > 0) {
+              console.log(`[kosis:${tableConfig.tblId}] err 20 resolved with objL1="${alt.objL1}", objL2="${alt.objL2}"`);
+              return result;
+            }
+          }
+        }
+        if (!_retryObjL) {
+          console.warn(`[kosis:${tableConfig.tblId}] err ${data.err}: ${data.errMsg}`);
+        }
       }
       return new Map();
     }
@@ -496,7 +555,6 @@ async function fetchKosisTable(tableConfig, year, _retryYear) {
     // Debug: log first row structure for new tables
     if (data.length > 0) {
       const sample = data[0];
-      // Log 2-level tables and ITM_NM for debugging
       if (sample.C2_NM !== undefined) {
         console.log(`[kosis:${tableConfig.tblId}] 2-level: C1="${sample.C1_NM}", C2="${sample.C2_NM}", ITM="${sample.ITM_NM}"`);
       }
@@ -508,7 +566,9 @@ async function fetchKosisTable(tableConfig, year, _retryYear) {
 
     return parseKosisResponse(data, tableConfig);
   } catch (e) {
-    console.warn(`[kosis:${tableConfig.tblId}] Fetch failed: ${e.message}`);
+    if (!_retryObjL) {
+      console.warn(`[kosis:${tableConfig.tblId}] Fetch failed: ${e.message}`);
+    }
     return new Map();
   }
 }
