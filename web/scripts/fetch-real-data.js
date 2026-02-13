@@ -416,7 +416,7 @@ async function main() {
   console.log(`Target year: ${TARGET_YEAR}`);
   console.log(`Cache: ${useCache ? "enabled" : "fresh fetch (saving to cache)"}`);
   console.log(`Regions: ${REGIONS.length}`);
-  console.log(`API keys: KOSIS=${API_KEYS.kosis ? "✓" : "✗"}, R-ONE=${API_KEYS.rone ? "✓" : "✗"}, data.go.kr=${API_KEYS.dataGoKr ? "✓" : "✗"}, ECOS=skipped`);
+  console.log(`API keys: KOSIS=${API_KEYS.kosis ? "✓" : "✗"}, R-ONE=${API_KEYS.rone ? "✓" : "✗"}, data.go.kr=${API_KEYS.dataGoKr ? "✓" : "✗"}, ECOS=${API_KEYS.ecos ? "✓" : "✗"}`);
 
   // Step 1: Generate fallback data (complete set)
   console.log("\n=== Generating Fallback Data ===");
@@ -437,16 +437,16 @@ async function main() {
   const roneData = roneResult.status === "fulfilled" ? roneResult.value : new Map();
   const datagokrData = datagokrResult.status === "fulfilled" ? datagokrResult.value : new Map();
 
-  // ECOS provides national-level data only - skip for 시군구
+  // ECOS provides province-level data distributed to 시군구 by population weight
   let ecosResult = new Map();
-  if (process.env.ENABLE_ECOS === "true") {
+  if (API_KEYS.ecos) {
     const regionPopulations = new Map();
     for (const [code, data] of kosisData) {
       if (data.population) regionPopulations.set(code, data.population);
     }
     ecosResult = await fetchAllEcosData(TARGET_YEAR, regionPopulations);
   } else {
-    console.log("\n=== BOK ECOS: Skipped (national-level only, not useful for 시군구) ===");
+    console.log("\n=== BOK ECOS: Skipped (no API key) ===");
   }
 
   // Step 3: Merge data per region (API > fallback)

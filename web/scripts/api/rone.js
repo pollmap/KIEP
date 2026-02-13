@@ -4,6 +4,7 @@
  *
  * API: https://www.reb.or.kr/r-one/openapi/SttsApiTblData.do
  * Note: R-ONE uses region NAMES not codes, requires name matching.
+ * Response mixes 시군구 and 읍면동 levels — must filter.
  */
 const { API_KEYS, RONE_BASE, REGIONS, nameToCode, PROVINCES } = require("../lib/config");
 const { cachedFetch } = require("../lib/cache");
@@ -23,6 +24,10 @@ const RONE_TABLES = {
   landPrice: {
     STATBL_ID: "A_2024_00900",   // 지가변동률 (시군구) - CONFIRMED 5359 rows
     fields: { priceChangeRate: null },
+  },
+  aptPrice: {
+    STATBL_ID: "A_2024_00045",   // 아파트 매매가격지수 (시군구)
+    fields: { aptPrice: null },
   },
 };
 
@@ -64,6 +69,66 @@ function matchRoneName(clsNm, roneNameMap) {
 }
 
 /**
+ * Check if a CLS_NM value looks like 읍면동 (sub-district) level.
+ * 시군구 names end in 시/군/구. 읍면동 end in 읍/면/동/리/가.
+ * Returns true if the name should be SKIPPED (is 읍면동 level).
+ */
+function isEupMyeonDongLevel(clsNm) {
+  if (!clsNm) return false;
+  const name = clsNm.trim();
+
+  // Skip province-level aggregates
+  if (name.endsWith("전체") || name === "전국" || name === "합계" || name === "소계") return true;
+
+  // Explicit 읍/면 suffix → definitely sub-district
+  if (/[읍면]$/.test(name)) return true;
+
+  // Short name ending in 동 (≤4 chars) without 구/시/군 → likely 읍면동
+  // But names like "해운대구" (contains 구), "강릉시" (contains 시) are 시군구
+  if (name.length <= 4 && /동$/.test(name) && !/[구시군]/.test(name)) return true;
+
+  // Names ending in 리/가 → 읍면동 level
+  if (/[리가]$/.test(name) && name.length <= 5) return true;
+
+  return false;
+}
+
+/**
+ * Discover available R-ONE statistical tables.
+ * Uses SttsApiTbl.do endpoint for diagnostics.
+ */
+async function discoverRoneTables() {
+  if (!API_KEYS.rone) return [];
+
+  const url = `https://www.reb.or.kr/r-one/openapi/SttsApiTbl.do?KEY=${API_KEYS.rone}`;
+  try {
+    const raw = await cachedFetch(url);
+    const data = unwrapResponse(raw);
+
+    // Response structure: SttsApiTbl[1].row[] with STATBL_ID, STATBL_NM, etc.
+    const rows = data?.SttsApiTbl?.[1]?.row
+      || data?.SttsApiTbl?.row
+      || data?.row
+      || [];
+
+    if (Array.isArray(rows) && rows.length > 0) {
+      console.log(`[rone:discovery] Found ${rows.length} available tables:`);
+      for (const r of rows.slice(0, 15)) {
+        console.log(`  - ${r.STATBL_ID}: ${r.STATBL_NM || "unnamed"} (${r.DTACYCLE_CD || "?"})`);
+      }
+      if (rows.length > 15) console.log(`  ... and ${rows.length - 15} more`);
+      return rows;
+    } else {
+      const preview = JSON.stringify(data).substring(0, 300);
+      console.log(`[rone:discovery] Unexpected response: ${preview}`);
+    }
+  } catch (e) {
+    console.log(`[rone:discovery] Failed: ${e.message}`);
+  }
+  return [];
+}
+
+/**
  * Fetch R-ONE data for a given year.
  */
 async function fetchAllRoneData(year) {
@@ -73,6 +138,9 @@ async function fetchAllRoneData(year) {
     console.warn("[rone] No API key configured");
     return new Map();
   }
+
+  // Discover available tables for diagnostics
+  await discoverRoneTables();
 
   const roneNameMap = buildRoneNameMap();
   const merged = new Map();
@@ -102,20 +170,27 @@ async function fetchAllRoneData(year) {
         continue;
       }
 
-      // Debug: log first 5 rows to understand field structure
+      // Debug: log first 3 rows
       console.log(`  [rone:debug] ${tableKey}: ${rows.length} total rows`);
       console.log(`  [rone:debug] Row keys: ${Object.keys(rows[0]).join(", ")}`);
-      for (let i = 0; i < Math.min(5, rows.length); i++) {
+      for (let i = 0; i < Math.min(3, rows.length); i++) {
         const r = rows[i];
-        console.log(`  [rone:debug] row[${i}]: CLS_NM="${r.CLS_NM || "N/A"}", CLS_ID="${r.CLS_ID || "N/A"}", CLS1_NM="${r.CLS1_NM || "N/A"}", CLS2_NM="${r.CLS2_NM || "N/A"}", ITM_NM="${r.ITM_NM || "N/A"}", DTA_VAL="${r.DTA_VAL || "N/A"}"`);
+        console.log(`  [rone:debug] row[${i}]: CLS_NM="${r.CLS_NM || "N/A"}", CLS1_NM="${r.CLS1_NM || "N/A"}", CLS2_NM="${r.CLS2_NM || "N/A"}", ITM_NM="${r.ITM_NM || "N/A"}", DTA_VAL="${r.DTA_VAL || "N/A"}"`);
       }
 
       let matched = 0;
       let unmatched = 0;
+      let filtered = 0;
       const unmatchedSamples = [];
 
       for (const row of rows) {
-        // Try multiple CLS field combinations for matching
+        // Filter out 읍면동-level rows (keep only 시군구 level)
+        const clsForFilter = row.CLS_NM || row.CLS2_NM || "";
+        if (isEupMyeonDongLevel(clsForFilter)) {
+          filtered++;
+          continue;
+        }
+
         let code = null;
 
         // Priority 1: CLS1_NM (province) + CLS2_NM (district)
@@ -157,7 +232,7 @@ async function fetchAllRoneData(year) {
         }
       }
 
-      console.log(`  ✓ ${tableKey}: ${matched} values matched, ${unmatched} unmatched`);
+      console.log(`  ✓ ${tableKey}: ${matched} values matched, ${unmatched} unmatched, ${filtered} filtered (읍면동)`);
       if (unmatchedSamples.length > 0) {
         console.log(`  [rone:debug] Unmatched samples: ${unmatchedSamples.join(", ")}`);
       }

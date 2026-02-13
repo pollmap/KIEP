@@ -65,6 +65,13 @@ const FIELD_KEYWORDS = {
   culturalFacilities: ["문화시설", "문화기반"],
   touristVisitors: ["관광객", "관광"],
   accommodations: ["숙박시설", "숙박업"],
+  daycareCenters: ["어린이집", "보육시설", "보육"],
+  seniorFacilities: ["노인복지", "경로당", "노인여가"],
+  buildingPermits: ["건축허가"],
+  disasterDamage: ["재해피해", "자연재해", "재난"],
+  waterQuality: ["수질"],
+  youthEmployment: ["청년고용"],
+  avgLandPrice: ["지가", "공시지가"],
 };
 
 /**
@@ -397,16 +404,8 @@ const KOSIS_TABLES = {
     regionField: "C1_NM",
   },
 
-  birth_count: {
-    orgId: "101",
-    tblId: "INH_1B81A01",
-    itmId: "ALL",
-    objL1: "ALL",
-    objL2: "",
-    prdSe: "Y",
-    fields: { birthRate: { itmNm: null, parse: "float" } },
-    regionField: "C1_NM",
-  },
+  // birth_count removed: INH_1B81A01 is internal ID (invalid for API)
+  // birthRate already works at 188 regions via discovery ("출생"/"조출생" keywords)
 
   retail_company: {
     orgId: "101",
@@ -454,12 +453,12 @@ const KOSIS_TABLES = {
 
   net_migration: {
     orgId: "101",
-    tblId: "INH_1B26001_A021",
+    tblId: "DT_1B26001",   // Was: INH_1B26001_A021 (invalid internal ID)
     itmId: "ALL",
     objL1: "ALL",
-    objL2: "",
+    objL2: "ALL",           // This table has 2 classification levels
     prdSe: "Y",
-    fields: { netMigration: { itmNm: null, parse: "int" } },
+    fields: { netMigration: { itmNm: "순이동", parse: "int" } },
     regionField: "C1_NM",
   },
 
@@ -496,9 +495,11 @@ async function fetchKosisTable(tableConfig, year, _retryYear, _retryObjL) {
 
   const fetchYear = _retryYear || year;
 
-  // Apply objL override if retrying
+  // Apply objL override if retrying (per KOSIS API docs: error 20 = missing classification levels)
   const effObjL1 = _retryObjL ? _retryObjL.objL1 : tableConfig.objL1;
-  const effObjL2 = _retryObjL ? _retryObjL.objL2 : (tableConfig.objL2 || "");
+  const effObjL2 = _retryObjL ? (_retryObjL.objL2 ?? "") : (tableConfig.objL2 || "");
+  const effObjL3 = _retryObjL?.objL3 ?? tableConfig.objL3 ?? "";
+  const effObjL4 = _retryObjL?.objL4 ?? tableConfig.objL4 ?? "";
 
   const params = new URLSearchParams({
     method: "getList",
@@ -506,7 +507,7 @@ async function fetchKosisTable(tableConfig, year, _retryYear, _retryObjL) {
     itmId: tableConfig.itmId,
     objL1: effObjL1,
     objL2: effObjL2,
-    objL3: "", objL4: "", objL5: "", objL6: "", objL7: "", objL8: "",
+    objL3: effObjL3, objL4: effObjL4, objL5: "", objL6: "", objL7: "", objL8: "",
     format: "json",
     jsonVD: "Y",
     prdSe: tableConfig.prdSe,
@@ -531,10 +532,12 @@ async function fetchKosisTable(tableConfig, year, _retryYear, _retryObjL) {
         }
         // err 20: objL parameter error — try alternative combinations
         if (data.err === "20" && !_retryObjL) {
+          // Per KOSIS API docs: err 20 = missing classification parameters
+          // Fix: progressively add objL levels set to "ALL"
           const alternatives = [
-            { objL1: "", objL2: "" },
-            { objL1: "ALL", objL2: "0" },
-            { objL1: "0", objL2: "" },
+            { objL1: "ALL", objL2: "ALL" },
+            { objL1: "ALL", objL2: "ALL", objL3: "ALL" },
+            { objL1: "ALL", objL2: "ALL", objL3: "ALL", objL4: "ALL" },
           ];
           for (const alt of alternatives) {
             await sleep(DELAY_MS);
@@ -769,7 +772,7 @@ const HISTORICAL_FIELD_MAP = {
   population: { tableKey: "population_v3", fieldKey: "population" },
   foreignRatio: { tableKey: "foreigner_aging", fieldKey: "foreignRatio" },
   agingRate: { tableKey: "foreigner_aging", fieldKey: "agingRate" },
-  birthRate: { tableKey: "birth_count", fieldKey: "birthRate" },
+  // birthRate removed: birth_count table (INH_) was invalid; birthRate works via discovery
   companyCount: { tableKey: "retail_company", fieldKey: "companyCount" },
   employeeCount: { tableKey: "retail_employee", fieldKey: "employeeCount" },
   hospitalCount: { tableKey: "healthcare", fieldKey: "hospitalCount" },
